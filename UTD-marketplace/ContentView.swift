@@ -1,21 +1,29 @@
-//
-//  ContentView.swift
-//  UTD-marketplace
-//
-//  Created by Alex Wang on 6/11/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            // First tab
+            Text("First")
+                .tabItem {
+                    Image(systemName: "house")
+                    Text("Listings")
+                }
+
+            // Second tab
+            Text("Second")
+                .tabItem {
+                    Image(systemName: "magnifyingglass")
+                    Text("Messages")
+                }
+
+            // Third tab
+            Text("Third")
+                .tabItem {
+                    Image(systemName: "person")
+                    Text("Profile")
+                }
         }
-        .padding()
     }
 }
 
