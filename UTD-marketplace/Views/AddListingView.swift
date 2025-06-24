@@ -1,0 +1,99 @@
+import SwiftUI
+import PhotosUI
+
+struct AddListingView: View {
+    @EnvironmentObject private var viewModel: ListingViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title       = ""
+    @State private var price       = ""
+    @State private var description = ""
+    @State private var photoItem: PhotosPickerItem?
+    @State private var imageData: Data?
+    @State private var showPriceError = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Photo") {
+                    PhotosPicker(
+                        selection: $photoItem,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        Text("Choose a photo…")
+                    }
+                    if let data = imageData,
+                       let ui = UIImage(data: data) {
+                        Image(uiImage: ui)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 200)
+                            .cornerRadius(8)
+                    }
+                }
+
+                Section("Details") {
+                    TextField("Title", text: $title)
+
+                    // Price field with inline error
+                    TextField("Price", text: Binding(
+                        get: { price },
+                        set: { newValue in
+                            let filtered = newValue.filter { $0.isNumber }
+                            showPriceError = (filtered != newValue)  // flag any bad chars
+                            price = filtered
+                        }
+                    ))
+                    .keyboardType(.numberPad)
+
+                    if showPriceError {
+                        Text("Numbers only")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+
+
+                    TextField("Description", text: $description, axis: .vertical)
+                }
+
+            }
+            .navigationTitle("New Listing")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        guard
+                            let data = imageData,
+                            !title.isEmpty,
+                            !price.isEmpty,
+                            !description.isEmpty
+                        else { return }
+
+                        let new = Listing(
+                            title: title,
+                            price: price,
+                            description: description,
+                            imageData: data
+                        )
+                        viewModel.listings.append(new)
+                        dismiss()
+                    }
+                    .disabled(
+                        title.isEmpty ||
+                        price.isEmpty ||
+                        description.isEmpty ||
+                        imageData == nil
+                    )
+                }
+            }
+        }
+        .task(id: photoItem) {
+            if let item = photoItem {
+                imageData = try? await item.loadTransferable(type: Data.self)
+            }
+        }
+    }
+}
