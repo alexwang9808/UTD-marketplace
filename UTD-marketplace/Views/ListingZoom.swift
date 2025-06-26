@@ -24,7 +24,11 @@ struct ListingDetailView: View {
                     Text("$\(listing.price)")
                         .font(.title2)
                         .foregroundColor(.accentColor)
-
+                    
+                    Text(listing.location)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
                     Text(listing.description)
                         .font(.body)
 

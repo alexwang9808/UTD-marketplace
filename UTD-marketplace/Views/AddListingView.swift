@@ -6,7 +6,7 @@ struct AddListingView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var title       = ""
-    @State private var location    = "UV"
+    @State private var location    = "University Village"
     @State private var price       = ""
     @State private var description = ""
     @State private var photoItem: PhotosPickerItem?
@@ -14,7 +14,17 @@ struct AddListingView: View {
     @State private var showPriceError = false
 
     // Dropdown options
-    private let locations = ["UV", "Canyon Creek", "Northside", "Vega Hall", "Andromeda Hall", "Capella Hall", "Helix Hall", "Sirius Hall", "Other"]
+    private let locations = [
+            "University Village",
+            "Canyon Creek",
+            "Northside",
+            "Vega Hall",
+            "Andromeda Hall",
+            "Capella Hall",
+            "Helix Hall",
+            "Sirius Hall",
+            "Other"
+        ]
 
     var body: some View {
         NavigationStack {
@@ -87,6 +97,7 @@ struct AddListingView: View {
                             title: title,
                             price: price,
                             description: description,
+                            location:location,
                             imageData: data
                         )
                         viewModel.listings.append(new)

@@ -14,32 +14,37 @@ struct ListingsView: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(viewModel.listings) { item in
-                        // wrap the entire card in a NavigationLink
-                        NavigationLink(destination: ListingDetailView(listing: item)) {
-                            VStack(spacing: 8) {
-                                // square image
+                        NavigationLink {
+                            ListingDetailView(listing: item)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                // square image with a corner radius
                                 if let ui = UIImage(data: item.imageData) {
                                     Image(uiImage: ui)
                                         .resizable()
                                         .aspectRatio(1, contentMode: .fill)
+                                        .frame(maxWidth: .infinity)
                                         .clipped()
+                                        .cornerRadius(8)
                                 }
 
                                 Text(item.title)
                                     .font(.subheadline)
                                     .lineLimit(1)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
 
                                 Text("$\(item.price)")
                                     .font(.headline)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Text(item.location)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)  // remove default nav link styling
                     }
                 }
-                .padding(16)
+                .padding(16)  // gutter on all sides
             }
             .navigationTitle("Listings")
         }

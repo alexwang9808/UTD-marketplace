@@ -5,5 +5,6 @@ struct Listing: Identifiable {
     let title: String
     let price: String
     let description: String
+    let location: String
     let imageData: Data
 }
