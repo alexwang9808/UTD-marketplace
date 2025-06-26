@@ -6,11 +6,15 @@ struct AddListingView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var title       = ""
+    @State private var location    = "UV"
     @State private var price       = ""
     @State private var description = ""
     @State private var photoItem: PhotosPickerItem?
     @State private var imageData: Data?
     @State private var showPriceError = false
+
+    // Dropdown options
+    private let locations = ["UV", "Canyon Creek", "Northside", "Vega Hall", "Andromeda Hall", "Capella Hall", "Helix Hall", "Sirius Hall", "Other"]
 
     var body: some View {
         NavigationStack {
@@ -36,12 +40,20 @@ struct AddListingView: View {
                 Section("Details") {
                     TextField("Title", text: $title)
 
-                    // Price field with inline error
+                    // Location dropdown
+                    Picker("Location", selection: $location) {
+                        ForEach(locations, id: \.self) { loc in
+                            Text(loc).tag(loc)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    // Price with digits-only filtering
                     TextField("Price", text: Binding(
                         get: { price },
                         set: { newValue in
                             let filtered = newValue.filter { $0.isNumber }
-                            showPriceError = (filtered != newValue)  // flag any bad chars
+                            showPriceError = (filtered != newValue)
                             price = filtered
                         }
                     ))
@@ -53,10 +65,8 @@ struct AddListingView: View {
                             .foregroundColor(.red)
                     }
 
-
                     TextField("Description", text: $description, axis: .vertical)
                 }
-
             }
             .navigationTitle("New Listing")
             .toolbar {
@@ -72,6 +82,7 @@ struct AddListingView: View {
                             !description.isEmpty
                         else { return }
 
+                        // Extend Listing model to include `location` if needed
                         let new = Listing(
                             title: title,
                             price: price,

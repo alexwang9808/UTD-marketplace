@@ -3,7 +3,7 @@ import SwiftUI
 struct ListingsView: View {
     @EnvironmentObject var viewModel: ListingViewModel
 
-    // Two equal columns
+    // two equal columns
     private let columns = [
         GridItem(.flexible()),
         GridItem(.flexible())
@@ -14,29 +14,32 @@ struct ListingsView: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(viewModel.listings) { item in
-                        VStack(spacing: 8) {
-                            // full-width square image
-                            if let ui = UIImage(data: item.imageData) {
-                                Image(uiImage: ui)
-                                    .resizable()
-                                    .aspectRatio(1, contentMode: .fill)
-                                    .clipped()
+                        // wrap the entire card in a NavigationLink
+                        NavigationLink(destination: ListingDetailView(listing: item)) {
+                            VStack(spacing: 8) {
+                                // square image
+                                if let ui = UIImage(data: item.imageData) {
+                                    Image(uiImage: ui)
+                                        .resizable()
+                                        .aspectRatio(1, contentMode: .fill)
+                                        .clipped()
+                                }
+
+                                Text(item.title)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Text("$\(item.price)")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
-
-                            // title + price
-                            Text(item.title)
-                                .font(.subheadline)
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            Text("$" + item.price)
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity)
                         }
-                        .frame(maxWidth: .infinity)      // fill its column
+                        .buttonStyle(.plain)  // remove default nav link styling
                     }
                 }
-                .padding(16)                         // gutter on all sides
+                .padding(16)
             }
             .navigationTitle("Listings")
         }
