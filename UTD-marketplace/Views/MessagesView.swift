@@ -9,20 +9,35 @@ struct MessagesView: View {
 
     var body: some View {
         NavigationStack {
-            List(sampleDMs, id: \.0) { sender, preview in
-                HStack(spacing: 12) {
-                    Image(systemName: "person.circle")
-                        .resizable()
-                        .frame(width: 32, height: 32)
-                    VStack(alignment: .leading) {
-                        Text(sender).bold()
-                        Text(preview).lineLimit(1)
-                            .foregroundColor(.secondary)
+            VStack(spacing: 0) {
+                // Orange line right below navigation bar
+                Rectangle()
+                    .fill(Color.orange)
+                    .frame(height: 4)
+                    .edgesIgnoringSafeArea(.horizontal)
+                    .padding(.top, -10)
+
+                List(sampleDMs, id: \.0) { sender, preview in
+                    HStack(spacing: 12) {
+                        Image(systemName: "person.circle")
+                            .resizable()
+                            .frame(width: 32, height: 32)
+                        VStack(alignment: .leading) {
+                            Text(sender).bold()
+                            Text(preview)
+                                .lineLimit(1)
+                                .foregroundColor(.secondary)
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
+                .listStyle(.plain)
             }
-            .navigationTitle("Messages")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    TitleView(title: "Messages")
+                }
+            }
         }
     }
 }

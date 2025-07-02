@@ -78,7 +78,7 @@ struct AddListingView: View {
                     TextField("Description", text: $description, axis: .vertical)
                 }
             }
-            .navigationTitle("New Listing")
+           // .navigationTitle("New Listing")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
