@@ -21,14 +21,9 @@ struct ListingsView: View {
                 ScrollView {
                     if viewModel.listings.isEmpty {
                         VStack(spacing: 16) {
-                            Image(systemName: "exclamationmark.bubble")
-                                .resizable()
-                                .frame(width: 60, height: 60)
-                                .foregroundColor(.gray)
-
-                            Text("No listings available")
+                            Text("No listings at the moment.")
                                 .font(.title3)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.black)
                         }
                         .frame(maxWidth: .infinity, minHeight: 300)
                     } else {

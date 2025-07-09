@@ -84,7 +84,7 @@ struct AddListingView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Post") {
                         guard
                             let data = imageData,
                             !title.isEmpty,
