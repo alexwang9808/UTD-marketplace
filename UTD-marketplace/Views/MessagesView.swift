@@ -4,7 +4,8 @@ struct MessagesView: View {
     // Replace with your real DM data source
     let sampleDMs = [
         ("Alice", "Hey, is that desk still available?"),
-        ("Bob", "Can you drop the price by $10?")
+        ("Bob", "Can you drop the price by $10?"),
+        ("Charlie", "Can you drop the price by $10?")
     ]
 
     var body: some View {
