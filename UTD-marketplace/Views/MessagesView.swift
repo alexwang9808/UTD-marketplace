@@ -36,7 +36,7 @@ struct MessagesView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    TitleView(title: "Messages")
+                    TitleView(title: "Message")
                 }
             }
         }
