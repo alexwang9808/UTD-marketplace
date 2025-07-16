@@ -85,24 +85,19 @@ struct AddListingView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Post") {
-                        guard
-                            let data = imageData,
-                            !title.isEmpty,
-                            !price.isEmpty,
-                            !description.isEmpty
-                        else { return }
-
-                        // Extend Listing model to include `location` if needed
-                        let new = Listing(
-                            id: Int(Date().timeIntervalSince1970 * 1000), // Temporary unique id
+                        guard imageData != nil, !title.isEmpty, !price.isEmpty, !description.isEmpty else { return }
+                        // For now, skip imageData for backend
+                        viewModel.addListing(
                             title: title,
                             price: price,
                             description: description,
                             location: location,
-                            imageData: data
-                        )
-                        viewModel.listings.append(new)
-                        dismiss()
+                            userId: 1 // TODO: Replace with real user id
+                        ) { success in
+                            print("Add listing success: \(success)")
+                            if success { dismiss() }
+                            else { print("Failed to add listing") }
+                        }
                     }
                     .disabled(
                         title.isEmpty ||

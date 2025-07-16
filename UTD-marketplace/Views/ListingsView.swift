@@ -33,7 +33,7 @@ struct ListingsView: View {
                                     ListingDetailView(listing: item)
                                 } label: {
                                     VStack(alignment: .leading, spacing: 8) {
-                                        if let ui = UIImage(data: item.imageData) {
+                                        if let data = item.imageData, let ui = UIImage(data: data) {
                                             Image(uiImage: ui)
                                                 .resizable()
                                                 .aspectRatio(1, contentMode: .fill)
@@ -46,12 +46,14 @@ struct ListingsView: View {
                                             .font(.subheadline)
                                             .lineLimit(1)
 
-                                        Text("$\(item.price)")
+                                        Text("$\(item.priceString)")
                                             .font(.headline)
 
-                                        Text(item.location)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                        if let location = item.location {
+                                            Text(location)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
                                     .frame(maxWidth: .infinity)
                                 }
