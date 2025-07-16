@@ -11,11 +11,33 @@ struct ListingDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     // — Detail Header —
-                    if let data = listing.imageData, let ui = UIImage(data: data) {
+                    if let imageUrl = listing.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .cornerRadius(12)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 200)
+                                .cornerRadius(12)
+                        }
+                    } else if let data = listing.imageData, let ui = UIImage(data: data) {
                         Image(uiImage: ui)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .cornerRadius(12)
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 200)
+                            .cornerRadius(12)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                                    .font(.title)
+                            )
                     }
 
                     Text(listing.title)

@@ -86,13 +86,13 @@ struct AddListingView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Post") {
                         guard imageData != nil, !title.isEmpty, !price.isEmpty, !description.isEmpty else { return }
-                        // For now, skip imageData for backend
                         viewModel.addListing(
                             title: title,
                             price: price,
                             description: description,
                             location: location,
-                            userId: 1 // TODO: Replace with real user id
+                            userId: 1,
+                            imageData: imageData
                         ) { success in
                             print("Add listing success: \(success)")
                             if success { dismiss() }

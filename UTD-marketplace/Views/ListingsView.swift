@@ -33,13 +33,41 @@ struct ListingsView: View {
                                     ListingDetailView(listing: item)
                                 } label: {
                                     VStack(alignment: .leading, spacing: 8) {
-                                        if let data = item.imageData, let ui = UIImage(data: data) {
+                                        if let imageUrl = item.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                            AsyncImage(url: url) { image in
+                                                image
+                                                    .resizable()
+                                                    .aspectRatio(1, contentMode: .fill)
+                                                    .frame(maxWidth: .infinity)
+                                                    .clipped()
+                                                    .cornerRadius(8)
+                                            } placeholder: {
+                                                Rectangle()
+                                                    .fill(Color.gray.opacity(0.3))
+                                                    .aspectRatio(1, contentMode: .fill)
+                                                    .frame(maxWidth: .infinity)
+                                                    .clipped()
+                                                    .cornerRadius(8)
+                                            }
+                                        } else if let data = item.imageData, let ui = UIImage(data: data) {
                                             Image(uiImage: ui)
                                                 .resizable()
                                                 .aspectRatio(1, contentMode: .fill)
                                                 .frame(maxWidth: .infinity)
                                                 .clipped()
                                                 .cornerRadius(8)
+                                        } else {
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.3))
+                                                .aspectRatio(1, contentMode: .fill)
+                                                .frame(maxWidth: .infinity)
+                                                .clipped()
+                                                .cornerRadius(8)
+                                                .overlay(
+                                                    Image(systemName: "photo")
+                                                        .foregroundColor(.gray)
+                                                        .font(.title)
+                                                )
                                         }
 
                                         Text(item.title)
