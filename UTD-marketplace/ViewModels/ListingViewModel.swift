@@ -2,11 +2,12 @@ import Foundation
 
 final class ListingViewModel: ObservableObject {
     @Published var listings: [Listing] = []
-    @Published var messages: [UUID: [Message]] = [:]
+    @Published var messages: [Int: [Message]] = [:]
 
     /// Appends a new outgoing message for a listing.
-    func sendMessage(to listingID: UUID, text: String) {
+    func sendMessage(to listingID: Int, text: String) {
         let msg = Message(
+            id: Int(Date().timeIntervalSince1970 * 1000), // Temporary unique id
             listingID: listingID,
             text: text,
             date: Date(),

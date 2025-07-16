@@ -1,7 +1,7 @@
 import Foundation
 
 struct Listing: Identifiable {
-    let id = UUID()
+    let id: Int
     let title: String
     let price: String
     let description: String

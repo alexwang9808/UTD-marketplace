@@ -94,10 +94,11 @@ struct AddListingView: View {
 
                         // Extend Listing model to include `location` if needed
                         let new = Listing(
+                            id: Int(Date().timeIntervalSince1970 * 1000), // Temporary unique id
                             title: title,
                             price: price,
                             description: description,
-                            location:location,
+                            location: location,
                             imageData: data
                         )
                         viewModel.listings.append(new)
