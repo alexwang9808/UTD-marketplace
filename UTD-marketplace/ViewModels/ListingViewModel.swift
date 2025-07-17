@@ -3,18 +3,150 @@ import Foundation
 final class ListingViewModel: ObservableObject {
     @Published var listings: [Listing] = []
     @Published var messages: [Int: [Message]] = [:]
+    @Published var conversations: [Conversation] = []
+    
+    // Current user ID - can be changed for testing
+    @Published var currentUserId = 1
+    
+    // Development helper - switch between test users
+    func switchUser(to userId: Int) {
+        currentUserId = userId
+        // Clear cached data when switching users
+        conversations = []
+        messages = [:]
+        print("🔄 Switched to user ID: \(userId)")
+        // Refresh data for new user
+        fetchConversations()
+    }
 
-    /// Appends a new outgoing message for a listing.
-    func sendMessage(to listingID: Int, text: String) {
-        let msg = Message(
-            id: Int(Date().timeIntervalSince1970 * 1000), // Temporary unique id
-            listingID: listingID,
-            text: text,
-            date: Date(),
-            isSender: true
-        )
-        messages[listingID, default: []].append(msg)
-        // TODO: hook up real backend / notify seller here
+    /// Fetches conversations for the current user
+    func fetchConversations() {
+        guard let url = URL(string: "http://localhost:3001/users/\(currentUserId)/conversations") else {
+            print("❌ Invalid URL for fetching conversations")
+            return
+        }
+        print("📡 Fetching conversations from: \(url)")
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            if let error = error {
+                print("❌ Network error fetching conversations: \(error.localizedDescription)")
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📥 Conversations HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("❌ No data received when fetching conversations")
+                return
+            }
+            
+            print("📥 Fetched conversations data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            do {
+                let fetchedConversations = try JSONDecoder().decode([Conversation].self, from: data)
+                print("✅ Successfully decoded \(fetchedConversations.count) conversations")
+                DispatchQueue.main.async {
+                    self?.conversations = fetchedConversations
+                }
+            } catch {
+                print("❌ Failed to decode conversations: \(error)")
+            }
+        }.resume()
+    }
+
+    /// Fetches messages for a specific listing from the backend
+    func fetchMessages(for listingId: Int) {
+        guard let url = URL(string: "http://localhost:3001/listings/\(listingId)/messages") else {
+            print("❌ Invalid URL for fetching messages")
+            return
+        }
+        print("📡 Fetching messages for listing \(listingId) from: \(url)")
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            if let error = error {
+                print("❌ Network error fetching messages: \(error.localizedDescription)")
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📥 Messages HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("❌ No data received when fetching messages")
+                return
+            }
+            
+            print("📥 Fetched messages data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            do {
+                let fetchedMessages = try JSONDecoder().decode([Message].self, from: data)
+                print("✅ Successfully decoded \(fetchedMessages.count) messages")
+                DispatchQueue.main.async {
+                    self?.messages[listingId] = fetchedMessages
+                }
+            } catch {
+                print("❌ Failed to decode messages: \(error)")
+            }
+        }.resume()
+    }
+
+    /// Sends a new message to the backend
+    func sendMessage(to listingId: Int, content: String, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "http://localhost:3001/messages") else {
+            print("❌ Invalid URL for sending message")
+            completion(false)
+            return
+        }
+        print("📡 Sending message to: \(url)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "content": content,
+            "userId": currentUserId,
+            "listingId": listingId
+        ]
+        print("📤 Message body: \(body)")
+        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                print("❌ Network error sending message: \(error.localizedDescription)")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📥 Send message HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("❌ No data received when sending message")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            print("📥 Send message response: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            if let message = try? JSONDecoder().decode(Message.self, from: data) {
+                print("✅ Successfully sent message")
+                DispatchQueue.main.async {
+                    self?.messages[listingId, default: []].append(message)
+                    // Refresh conversations to show the new message
+                    self?.fetchConversations()
+                    completion(true)
+                }
+            } else {
+                print("❌ Failed to decode sent message response")
+                DispatchQueue.main.async { completion(false) }
+            }
+        }.resume()
     }
 
     func addListing(title: String, price: String, description: String, location: String, userId: Int, imageData: Data?, completion: @escaping (Bool) -> Void) {

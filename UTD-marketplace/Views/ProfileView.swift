@@ -2,73 +2,118 @@ import SwiftUI
 import PhotosUI
 
 struct ProfileView: View {
-    @State private var showingAdd = false
-    @State private var showingImagePicker = false
-    @State private var selectedItem: PhotosPickerItem? = nil
-    @State private var profileImage: UIImage? = nil
-
+    @EnvironmentObject private var viewModel: ListingViewModel
+    
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // ✅ Clean, straight black line under nav bar
-                Rectangle()
-                    .fill(Color.orange)
-                    .frame(height: 4)
-                    .edgesIgnoringSafeArea(.horizontal)
-                    .padding(.top, -10)
-                VStack(spacing: 20) {
-                    Group {
-                        if let image = profileImage {
-                            Image(uiImage: image)
-                                .resizable()
-                        } else {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .frame(width: 100, height: 100)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.gray, lineWidth: 2))
-                    .onTapGesture {
-                        showingImagePicker = true
-                    }
+        NavigationView {
+            VStack(spacing: 20) {
+                // Profile header
+                VStack(spacing: 16) {
+                    Circle()
+                        .fill(Color.blue.opacity(0.2))
+                        .frame(width: 100, height: 100)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.blue)
+                        )
                     
-                    Text("Alex Wang")
+                    Text("User \(viewModel.currentUserId)")
                         .font(.title2)
+                        .fontWeight(.semibold)
                     
-                    Button("Add Listing") {
-                        showingAdd = true
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .sheet(isPresented: $showingAdd) {
-                        AddListingView()
-                    }
-                    
-                    Spacer()
-                    
-                    Button("Log Out") {
-                        // your log-out logic
-                    }
-                    .buttonStyle(.borderedProminent)
+                    Text("user\(viewModel.currentUserId)@utdallas.edu")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
-                .padding()
+                .padding(.top)
                 
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        TitleView(title: "Profile")
-                    }
-                }
-                .photosPicker(isPresented: $showingImagePicker, selection: $selectedItem)
-                .onChange(of: selectedItem) {
-                    Task {
-                        if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-                           let uiImage = UIImage(data: data) {
-                            profileImage = uiImage
+                // Development Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Development Tools")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 8) {
+                        Text("Switch User (for testing)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 12) {
+                            ForEach(1...4, id: \.self) { userId in
+                                Button("User \(userId)") {
+                                    viewModel.switchUser(to: userId)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    viewModel.currentUserId == userId 
+                                        ? Color.blue 
+                                        : Color.gray.opacity(0.2)
+                                )
+                                .foregroundColor(
+                                    viewModel.currentUserId == userId 
+                                        ? .white 
+                                        : .primary
+                                )
+                                .cornerRadius(8)
+                            }
                         }
                     }
+                    .padding()
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                    )
                 }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                // Profile options
+                VStack(spacing: 0) {
+                    ProfileRow(icon: "person.circle", title: "Edit Profile", action: {})
+                    ProfileRow(icon: "heart", title: "Favorites", action: {})
+                    ProfileRow(icon: "clock", title: "Order History", action: {})
+                    ProfileRow(icon: "gear", title: "Settings", action: {})
+                    ProfileRow(icon: "questionmark.circle", title: "Help & Support", action: {})
+                }
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                .padding(.horizontal)
+                
+                Spacer()
             }
+            .navigationTitle("Profile")
         }
+    }
+}
+
+struct ProfileRow: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(.blue)
+                    .frame(width: 24)
+                
+                Text(title)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+            }
+            .padding()
+        }
+        .background(Color(.systemBackground))
     }
 }
