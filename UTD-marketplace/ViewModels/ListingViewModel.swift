@@ -100,4 +100,40 @@ final class ListingViewModel: ObservableObject {
             }
         }.resume()
     }
+    
+    func fetchListings() {
+        guard let url = URL(string: "http://localhost:3001/listings") else {
+            print("❌ Invalid URL for fetching listings")
+            return
+        }
+        print("📡 Fetching listings from: \(url)")
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            if let error = error {
+                print("❌ Network error fetching listings: \(error.localizedDescription)")
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📥 HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("❌ No data received when fetching listings")
+                return
+            }
+            
+            print("📥 Fetched listings data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            do {
+                let listings = try JSONDecoder().decode([Listing].self, from: data)
+                print("✅ Successfully decoded \(listings.count) listings")
+                DispatchQueue.main.async {
+                    self?.listings = listings
+                }
+            } catch {
+                print("❌ Failed to decode listings: \(error)")
+            }
+        }.resume()
+    }
 }

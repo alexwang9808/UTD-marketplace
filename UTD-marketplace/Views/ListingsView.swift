@@ -34,20 +34,44 @@ struct ListingsView: View {
                                 } label: {
                                     VStack(alignment: .leading, spacing: 8) {
                                         if let imageUrl = item.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                                            AsyncImage(url: url) { image in
-                                                image
-                                                    .resizable()
-                                                    .aspectRatio(1, contentMode: .fill)
-                                                    .frame(maxWidth: .infinity)
-                                                    .clipped()
-                                                    .cornerRadius(8)
-                                            } placeholder: {
-                                                Rectangle()
-                                                    .fill(Color.gray.opacity(0.3))
-                                                    .aspectRatio(1, contentMode: .fill)
-                                                    .frame(maxWidth: .infinity)
-                                                    .clipped()
-                                                    .cornerRadius(8)
+                                            AsyncImage(url: url) { phase in
+                                                switch phase {
+                                                case .success(let image):
+                                                    image
+                                                        .resizable()
+                                                        .aspectRatio(1, contentMode: .fill)
+                                                        .frame(maxWidth: .infinity)
+                                                        .clipped()
+                                                        .cornerRadius(8)
+                                                case .failure(_):
+                                                    Rectangle()
+                                                        .fill(Color.red.opacity(0.3))
+                                                        .aspectRatio(1, contentMode: .fill)
+                                                        .frame(maxWidth: .infinity)
+                                                        .clipped()
+                                                        .cornerRadius(8)
+                                                        .overlay(
+                                                            Image(systemName: "exclamationmark.triangle")
+                                                                .foregroundColor(.red)
+                                                        )
+                                                case .empty:
+                                                    Rectangle()
+                                                        .fill(Color.gray.opacity(0.3))
+                                                        .aspectRatio(1, contentMode: .fill)
+                                                        .frame(maxWidth: .infinity)
+                                                        .clipped()
+                                                        .cornerRadius(8)
+                                                        .overlay(
+                                                            ProgressView()
+                                                        )
+                                                @unknown default:
+                                                    Rectangle()
+                                                        .fill(Color.gray.opacity(0.3))
+                                                        .aspectRatio(1, contentMode: .fill)
+                                                        .frame(maxWidth: .infinity)
+                                                        .clipped()
+                                                        .cornerRadius(8)
+                                                }
                                             }
                                         } else if let data = item.imageData, let ui = UIImage(data: data) {
                                             Image(uiImage: ui)

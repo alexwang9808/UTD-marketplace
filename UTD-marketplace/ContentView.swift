@@ -25,6 +25,9 @@ struct ContentView: View {
                 }
         }
         .environmentObject(viewModel)
+        .onAppear {
+            viewModel.fetchListings()
+        }
     }
 }
 
