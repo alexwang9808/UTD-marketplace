@@ -58,7 +58,7 @@ struct ListingDetailView: View {
                     }
 
                     // Send Message Button
-                    if let listingId = listing.id, let userId = listing.userId, userId != viewModel.currentUserId {
+                    if let userId = listing.userId, userId != viewModel.currentUserId {
                         NavigationLink {
                             ConversationDetailView(
                                 listing: listing, 
