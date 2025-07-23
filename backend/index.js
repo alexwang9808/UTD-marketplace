@@ -217,6 +217,47 @@ app.post('/users', upload.single('image'), async (req, res) => {
   }
 });
 
+// Update a user (including profile image)
+app.put('/users/:id', upload.single('image'), async (req, res) => {
+  const { id } = req.params;
+  const { email, name } = req.body;
+  
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'Invalid user ID' });
+  }
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Missing required field: email' });
+  }
+  
+  try {
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+    
+    // Prepare update data
+    const updateData = {
+      email,
+      name,
+    };
+    
+    // Only update imageUrl if a new image was provided
+    if (imageUrl) {
+      updateData.imageUrl = imageUrl;
+    }
+    
+    const user = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+    });
+    
+    res.json(user);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

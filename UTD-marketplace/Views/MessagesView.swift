@@ -29,7 +29,7 @@ struct MessagesView: View {
                         NavigationLink {
                             ConversationDetailView(conversation: conversation)
                         } label: {
-                            HStack(spacing: 12) {
+                    HStack(spacing: 12) {
                                 // Profile image or placeholder
                                 if let imageUrl = conversation.otherUser.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
                                     AsyncImage(url: url) { image in
@@ -45,7 +45,7 @@ struct MessagesView: View {
                                     }
                                 } else {
                                     Image(systemName: "person.circle.fill")
-                                        .resizable()
+                            .resizable()
                                         .frame(width: 40, height: 40)
                                         .foregroundColor(.gray)
                                 }
@@ -67,13 +67,13 @@ struct MessagesView: View {
                                     Text(conversation.lastMessage.content)
                                         .font(.subheadline)
                                         .lineLimit(2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding(.vertical, 4)
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .listStyle(.plain)
+                    .padding(.vertical, 4)
+                        }
+                }
+                .listStyle(.plain)
                 }
             }
             .toolbar {
