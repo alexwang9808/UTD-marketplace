@@ -8,12 +8,16 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  name      String?
-  imageUrl  String?   // Profile picture URL
-  listings  Listing[]
-  messages  Message[]
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  password          String?   // Password hash
+  name              String?
+  imageUrl          String?   // Profile picture URL
+  isVerified        Boolean   @default(false)
+  verificationToken String?   @unique
+  createdAt         DateTime  @default(now())
+  listings          Listing[]
+  messages          Message[]
 }
 
 model Listing {
