@@ -22,11 +22,6 @@ struct ListingDetailView: View {
                                 .frame(height: 200)
                                 .cornerRadius(12)
                         }
-                    } else if let data = listing.imageData, let ui = UIImage(data: data) {
-                        Image(uiImage: ui)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .cornerRadius(12)
                     } else {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))

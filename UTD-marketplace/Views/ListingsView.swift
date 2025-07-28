@@ -73,14 +73,7 @@ struct ListingsView: View {
                                                         .cornerRadius(8)
                                                 }
                                             }
-                                        } else if let data = item.imageData, let ui = UIImage(data: data) {
-                                            Image(uiImage: ui)
-                                                .resizable()
-                                                .aspectRatio(1, contentMode: .fill)
-                                                .frame(maxWidth: .infinity)
-                                                .clipped()
-                                                .cornerRadius(8)
-                                        } else {
+                                                                } else {
                                             Rectangle()
                                                 .fill(Color.gray.opacity(0.3))
                                                 .aspectRatio(1, contentMode: .fill)
