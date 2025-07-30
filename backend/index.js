@@ -426,6 +426,9 @@ app.post('/listings', upload.single('image'), async (req, res) => {
         location,
         imageUrl,
       },
+      include: {
+        user: true
+      }
     });
     res.status(201).json(listing);
   } catch (error) {

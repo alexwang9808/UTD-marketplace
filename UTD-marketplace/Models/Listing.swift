@@ -9,6 +9,7 @@ struct Listing: Identifiable, Codable {
     let imageUrl: String?
     let createdAt: String?
     let userId: Int?
+    let user: User?
     
     // Local-only property for temporary image data (not encoded/decoded)
     var imageData: Data? {

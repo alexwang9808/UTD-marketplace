@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ListingsView: View {
     @EnvironmentObject var viewModel: ListingViewModel
+    @State private var showingAddListing = false
 
     private let columns = [
         GridItem(.flexible()),
@@ -91,6 +92,48 @@ struct ListingsView: View {
                                             .font(.subheadline)
                                             .lineLimit(1)
 
+                                        // Seller info
+                                        HStack(spacing: 6) {
+                                            // Seller profile picture
+                                            Group {
+                                                if let user = item.user,
+                                                   let imageUrl = user.imageUrl,
+                                                   let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                                    AsyncImage(url: url) { image in
+                                                        image
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                    } placeholder: {
+                                                        Circle()
+                                                            .fill(Color.blue.opacity(0.2))
+                                                            .overlay(
+                                                                Image(systemName: "person.fill")
+                                                                    .font(.system(size: 8))
+                                                                    .foregroundColor(.blue)
+                                                            )
+                                                    }
+                                                } else {
+                                                    Circle()
+                                                        .fill(Color.blue.opacity(0.2))
+                                                        .overlay(
+                                                            Image(systemName: "person.fill")
+                                                                .font(.system(size: 8))
+                                                                .foregroundColor(.blue)
+                                                        )
+                                                }
+                                            }
+                                            .frame(width: 16, height: 16)
+                                            .clipShape(Circle())
+                                            
+                                            // Seller name
+                                            Text(item.user?.name ?? "User \(item.userId ?? 0)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                                .lineLimit(1)
+                                            
+                                            Spacer()
+                                        }
+
                                         Text("$\(item.priceString)")
                                             .font(.headline)
 
@@ -113,6 +156,18 @@ struct ListingsView: View {
                     ToolbarItem(placement: .principal) {
                         TitleView(title: "Listings")
                     }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showingAddListing = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
+                .sheet(isPresented: $showingAddListing) {
+                    AddListingView()
                 }
 
             }

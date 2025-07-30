@@ -91,7 +91,7 @@ struct AddListingView: View {
                             price: price,
                             description: description,
                             location: location,
-                            userId: 1,
+                            userId: viewModel.currentUserId,
                             imageData: imageData
                         ) { success in
                             print("Add listing success: \(success)")
@@ -104,6 +104,10 @@ struct AddListingView: View {
                         price.isEmpty ||
                         description.isEmpty ||
                         imageData == nil
+                    )
+                    .foregroundColor(
+                        (title.isEmpty || price.isEmpty || description.isEmpty || imageData == nil) 
+                        ? .gray : .blue
                     )
                 }
             }

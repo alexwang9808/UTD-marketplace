@@ -11,7 +11,15 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            VStack(spacing: 0) {
+                // Orange line right below navigation bar
+                Rectangle()
+                    .fill(Color.orange)
+                    .frame(height: 4)
+                    .edgesIgnoringSafeArea(.horizontal)
+                    .padding(.top, -10)
+                
+                VStack(spacing: 20) {
                 // Profile header
                 VStack(spacing: 16) {
                     // Profile picture with tap gesture
@@ -147,8 +155,13 @@ struct ProfileView: View {
                 .padding(.horizontal)
                 
                 Spacer()
+                }
             }
-            .navigationTitle("Profile")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    TitleView(title: "Profile")
+                }
+            }
             .onAppear {
                 fetchCurrentUser()
             }

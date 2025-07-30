@@ -52,17 +52,14 @@ struct MessagesView: View {
                                 
                                 VStack(alignment: .leading, spacing: 4) {
                                     HStack {
-                                        Text(conversation.otherUser.name ?? conversation.otherUser.email)
+                                        Text("\(conversation.otherUser.name ?? conversation.otherUser.email) · \(conversation.listing.title)")
                                             .font(.headline)
+                                            .lineLimit(1)
                                         Spacer()
                                         Text(formatDate(conversation.lastMessage.createdAt))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
-                                    
-                                    Text("Re: \(conversation.listing.title)")
-                                        .font(.caption)
-                                        .foregroundColor(.blue)
                                     
                                     Text(conversation.lastMessage.content)
                                         .font(.subheadline)
@@ -81,9 +78,9 @@ struct MessagesView: View {
                     TitleView(title: "Messages")
                 }
             }
-            .onAppear {
-                viewModel.fetchConversations()
-            }
+                    .onAppear {
+            viewModel.fetchConversations()
+        }
         }
     }
     
