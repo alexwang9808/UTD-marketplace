@@ -12,18 +12,62 @@ struct ListingDetailView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // — Detail Header —
-                    if let imageUrl = listing.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .cornerRadius(12)
-                        } placeholder: {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(height: 200)
-                                .cornerRadius(12)
+                    // — Image Gallery —
+                    if !listing.imageUrls.isEmpty {
+                        TabView {
+                            ForEach(Array(listing.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
+                                if let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                    AsyncImage(url: url) { phase in
+                                        switch phase {
+                                        case .success(let image):
+                                            image
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .cornerRadius(12)
+                                        case .failure(_):
+                                            Rectangle()
+                                                .fill(Color.red.opacity(0.3))
+                                                .frame(height: 200)
+                                                .cornerRadius(12)
+                                                .overlay(
+                                                    Image(systemName: "exclamationmark.triangle")
+                                                        .foregroundColor(.red)
+                                                )
+                                        case .empty:
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.3))
+                                                .frame(height: 200)
+                                                .cornerRadius(12)
+                                                .overlay(
+                                                    ProgressView()
+                                                )
+                                        @unknown default:
+                                            Rectangle()
+                                                .fill(Color.gray.opacity(0.3))
+                                                .frame(height: 200)
+                                                .cornerRadius(12)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .frame(height: 250)
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+                        
+                        // Image counter
+                        if listing.imageUrls.count > 1 {
+                            HStack {
+                                Spacer()
+                                Text("\(listing.imageUrls.count) photos")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.black.opacity(0.6))
+                                    .cornerRadius(8)
+                                Spacer()
+                            }
+                            .padding(.top, 8)
                         }
                     } else {
                         Rectangle()

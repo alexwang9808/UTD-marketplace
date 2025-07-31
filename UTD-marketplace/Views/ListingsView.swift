@@ -10,15 +10,15 @@ struct ListingsView: View {
     ]
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack(spacing: 0) {
                 // ✅ Clean, straight black line under nav bar
                 Rectangle()
                     .fill(Color.orange)
                     .frame(height: 4)
                     .edgesIgnoringSafeArea(.horizontal)
-                    .padding(.top, -10)
-
+                
+                VStack(spacing: 20) {
                 ScrollView {
                     if viewModel.listings.isEmpty {
                         VStack(spacing: 16) {
@@ -34,7 +34,7 @@ struct ListingsView: View {
                                     ListingDetailView(listing: item)
                                 } label: {
                                     VStack(alignment: .leading, spacing: 8) {
-                                        if let imageUrl = item.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                        if let imageUrl = item.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
                                             AsyncImage(url: url) { phase in
                                                 switch phase {
                                                 case .success(let image):
@@ -150,6 +150,7 @@ struct ListingsView: View {
                         }
                         .padding(16)
                     }
+                }
                 }
             
                 .toolbar {

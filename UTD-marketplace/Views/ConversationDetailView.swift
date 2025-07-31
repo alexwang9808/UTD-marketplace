@@ -43,7 +43,7 @@ struct ConversationDetailView: View {
         VStack(spacing: 0) {
             // Listing header
             HStack(spacing: 12) {
-                if let imageUrl = displayListing.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                if let imageUrl = displayListing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
                     AsyncImage(url: url) { image in
                         image
                             .resizable()

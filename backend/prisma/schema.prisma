@@ -25,7 +25,7 @@ model Listing {
   title       String
   description String?
   price       Float
-  imageUrl    String?   // Listing image URL
+  imageUrls   String[]  // Listing image URLs (array)
   location    String?   // Add location field
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])

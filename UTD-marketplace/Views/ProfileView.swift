@@ -19,6 +19,7 @@ struct ProfileView: View {
                     .edgesIgnoringSafeArea(.horizontal)
                     .padding(.top, -10)
                 
+                ScrollView {
                 VStack(spacing: 20) {
                 // Profile header
                 VStack(spacing: 16) {
@@ -155,6 +156,7 @@ struct ProfileView: View {
                 .padding(.horizontal)
                 
                 Spacer()
+                }
                 }
             }
             .toolbar {

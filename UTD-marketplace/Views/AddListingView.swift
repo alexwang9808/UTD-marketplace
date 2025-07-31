@@ -9,8 +9,8 @@ struct AddListingView: View {
     @State private var location    = "University Village"
     @State private var price       = ""
     @State private var description = ""
-    @State private var photoItem: PhotosPickerItem?
-    @State private var imageData: Data?
+    @State private var photoItems: [PhotosPickerItem] = []
+    @State private var imageDataArray: [Data] = []
     @State private var showPriceError = false
 
     // Dropdown options
@@ -29,21 +29,49 @@ struct AddListingView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Photo") {
+                Section("Photos") {
                     PhotosPicker(
-                        selection: $photoItem,
+                        selection: $photoItems,
+                        maxSelectionCount: 5,
                         matching: .images,
                         photoLibrary: .shared()
                     ) {
-                        Text("Choose a photo…")
+                        Label("Choose photos (up to 5)", systemImage: "photo.on.rectangle.angled")
                     }
-                    if let data = imageData,
-                       let ui = UIImage(data: data) {
-                        Image(uiImage: ui)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 200)
-                            .cornerRadius(8)
+                    
+                    if !imageDataArray.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(Array(imageDataArray.enumerated()), id: \.offset) { index, data in
+                                    if let ui = UIImage(data: data) {
+                                        ZStack(alignment: .topTrailing) {
+                                            Image(uiImage: ui)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 120, height: 120)
+                                                .clipped()
+                                                .cornerRadius(8)
+                                            
+                                            Button(action: {
+                                                imageDataArray.remove(at: index)
+                                                photoItems.remove(at: index)
+                                            }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .foregroundColor(.white)
+                                                    .background(Color.black.opacity(0.6))
+                                                    .clipShape(Circle())
+                                            }
+                                            .padding(4)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                        
+                        Text("\(imageDataArray.count) of 5 photos selected")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -85,14 +113,14 @@ struct AddListingView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Post") {
-                        guard imageData != nil, !title.isEmpty, !price.isEmpty, !description.isEmpty else { return }
+                        guard !imageDataArray.isEmpty, !title.isEmpty, !price.isEmpty, !description.isEmpty else { return }
                         viewModel.addListing(
                             title: title,
                             price: price,
                             description: description,
                             location: location,
                             userId: viewModel.currentUserId,
-                            imageData: imageData
+                            imageDataArray: imageDataArray
                         ) { success in
                             print("Add listing success: \(success)")
                             if success { dismiss() }
@@ -103,18 +131,21 @@ struct AddListingView: View {
                         title.isEmpty ||
                         price.isEmpty ||
                         description.isEmpty ||
-                        imageData == nil
+                        imageDataArray.isEmpty
                     )
                     .foregroundColor(
-                        (title.isEmpty || price.isEmpty || description.isEmpty || imageData == nil) 
+                        (title.isEmpty || price.isEmpty || description.isEmpty || imageDataArray.isEmpty) 
                         ? .gray : .blue
                     )
                 }
             }
         }
-        .task(id: photoItem) {
-            if let item = photoItem {
-                imageData = try? await item.loadTransferable(type: Data.self)
+        .task(id: photoItems) {
+            imageDataArray.removeAll()
+            for item in photoItems {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    imageDataArray.append(data)
+                }
             }
         }
     }

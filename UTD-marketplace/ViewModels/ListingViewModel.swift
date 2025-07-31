@@ -149,7 +149,7 @@ final class ListingViewModel: ObservableObject {
         }.resume()
     }
 
-    func addListing(title: String, price: String, description: String, location: String, userId: Int, imageData: Data?, completion: @escaping (Bool) -> Void) {
+    func addListing(title: String, price: String, description: String, location: String, userId: Int, imageDataArray: [Data], completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/listings") else {
             print("❌ Invalid URL")
             completion(false)
@@ -187,10 +187,10 @@ final class ListingViewModel: ObservableObject {
         body.append("Content-Disposition: form-data; name=\"userId\"\r\n\r\n".data(using: .utf8)!)
         body.append("\(userId)\r\n".data(using: .utf8)!)
         
-        // Add image if provided
-        if let imageData = imageData {
+        // Add images if provided
+        for (index, imageData) in imageDataArray.enumerated() {
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"images\"; filename=\"image\(index).jpg\"\r\n".data(using: .utf8)!)
             body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
             body.append(imageData)
             body.append("\r\n".data(using: .utf8)!)

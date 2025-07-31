@@ -4,7 +4,7 @@ struct MessagesView: View {
     @EnvironmentObject var viewModel: ListingViewModel
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack(spacing: 0) {
                 // Orange line right below navigation bar
                 Rectangle()
@@ -12,7 +12,8 @@ struct MessagesView: View {
                     .frame(height: 4)
                     .edgesIgnoringSafeArea(.horizontal)
                     .padding(.top, -10)
-
+                
+                VStack(spacing: 20) {
                 if viewModel.conversations.isEmpty {
                     VStack(spacing: 16) {
                         Text("No conversations yet.")
@@ -77,8 +78,9 @@ struct MessagesView: View {
                 ToolbarItem(placement: .principal) {
                     TitleView(title: "Messages")
                 }
+                            }
             }
-                    .onAppear {
+            .onAppear {
             viewModel.fetchConversations()
         }
         }

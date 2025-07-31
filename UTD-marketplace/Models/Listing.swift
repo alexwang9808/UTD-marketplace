@@ -6,7 +6,7 @@ struct Listing: Identifiable, Codable {
     let price: Double
     let description: String?
     let location: String?
-    let imageUrl: String?
+    let imageUrls: [String]
     let createdAt: String?
     let userId: Int?
     let user: User?
@@ -19,5 +19,10 @@ struct Listing: Identifiable, Codable {
     // Custom price display as String
     var priceString: String {
         return String(format: "%.0f", price)
+    }
+    
+    // First image URL for compatibility
+    var primaryImageUrl: String? {
+        return imageUrls.first
     }
 }

@@ -410,13 +410,13 @@ app.get('/verify-email', async (req, res) => {
 });
 
 // Create a new listing
-app.post('/listings', upload.single('image'), async (req, res) => {
+app.post('/listings', upload.array('images', 5), async (req, res) => {
   const { title, description, price, userId, location } = req.body;
   if (!title || !price || !userId) {
     return res.status(400).json({ error: 'Missing required fields: title, price, userId' });
   }
   try {
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const imageUrls = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
     const listing = await prisma.listing.create({
       data: {
         title,
@@ -424,7 +424,7 @@ app.post('/listings', upload.single('image'), async (req, res) => {
         price: parseFloat(price),
         userId: parseInt(userId),
         location,
-        imageUrl,
+        imageUrls,
       },
       include: {
         user: true
