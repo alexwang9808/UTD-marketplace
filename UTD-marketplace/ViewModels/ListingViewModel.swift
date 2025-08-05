@@ -14,7 +14,7 @@ final class ListingViewModel: ObservableObject {
         // Clear cached data when switching users
         conversations = []
         messages = [:]
-        print("🔄 Switched to user ID: \(userId)")
+        print("Switched to user ID: \(userId)")
         // Refresh data for new user
         fetchConversations()
     }
@@ -22,36 +22,36 @@ final class ListingViewModel: ObservableObject {
     /// Fetches conversations for the current user
     func fetchConversations() {
         guard let url = URL(string: "http://localhost:3001/users/\(currentUserId)/conversations") else {
-            print("❌ Invalid URL for fetching conversations")
+            print("Invalid URL for fetching conversations")
             return
         }
-        print("📡 Fetching conversations from: \(url)")
+        print("Fetching conversations from: \(url)")
         
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             if let error = error {
-                print("❌ Network error fetching conversations: \(error.localizedDescription)")
+                print("Network error fetching conversations: \(error.localizedDescription)")
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("📥 Conversations HTTP Status: \(httpResponse.statusCode)")
+                print("Conversations HTTP Status: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
-                print("❌ No data received when fetching conversations")
+                print("No data received when fetching conversations")
                 return
             }
             
-            print("📥 Fetched conversations data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            print("Fetched conversations data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
             
             do {
                 let fetchedConversations = try JSONDecoder().decode([Conversation].self, from: data)
-                print("✅ Successfully decoded \(fetchedConversations.count) conversations")
+                print("Successfully decoded \(fetchedConversations.count) conversations")
                 DispatchQueue.main.async {
                     self?.conversations = fetchedConversations
                 }
             } catch {
-                print("❌ Failed to decode conversations: \(error)")
+                print("Failed to decode conversations: \(error)")
             }
         }.resume()
     }
@@ -59,36 +59,36 @@ final class ListingViewModel: ObservableObject {
     /// Fetches messages for a specific listing from the backend
     func fetchMessages(for listingId: Int) {
         guard let url = URL(string: "http://localhost:3001/listings/\(listingId)/messages") else {
-            print("❌ Invalid URL for fetching messages")
+            print("Invalid URL for fetching messages")
             return
         }
-        print("📡 Fetching messages for listing \(listingId) from: \(url)")
+        print("Fetching messages for listing \(listingId) from: \(url)")
         
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             if let error = error {
-                print("❌ Network error fetching messages: \(error.localizedDescription)")
+                print("Network error fetching messages: \(error.localizedDescription)")
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("📥 Messages HTTP Status: \(httpResponse.statusCode)")
+                print("Messages HTTP Status: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
-                print("❌ No data received when fetching messages")
+                print("No data received when fetching messages")
                 return
             }
             
-            print("📥 Fetched messages data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            print("Fetched messages data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
             
             do {
                 let fetchedMessages = try JSONDecoder().decode([Message].self, from: data)
-                print("✅ Successfully decoded \(fetchedMessages.count) messages")
+                print("Successfully decoded \(fetchedMessages.count) messages")
                 DispatchQueue.main.async {
                     self?.messages[listingId] = fetchedMessages
                 }
             } catch {
-                print("❌ Failed to decode messages: \(error)")
+                print("Failed to decode messages: \(error)")
             }
         }.resume()
     }
@@ -96,11 +96,11 @@ final class ListingViewModel: ObservableObject {
     /// Sends a new message to the backend
     func sendMessage(to listingId: Int, content: String, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/messages") else {
-            print("❌ Invalid URL for sending message")
+            print("Invalid URL for sending message")
             completion(false)
             return
         }
-        print("📡 Sending message to: \(url)")
+        print("Sending message to: \(url)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -111,31 +111,31 @@ final class ListingViewModel: ObservableObject {
             "userId": currentUserId,
             "listingId": listingId
         ]
-        print("📤 Message body: \(body)")
+        print("Message body: \(body)")
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
-                print("❌ Network error sending message: \(error.localizedDescription)")
+                print("Network error sending message: \(error.localizedDescription)")
                 DispatchQueue.main.async { completion(false) }
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("📥 Send message HTTP Status: \(httpResponse.statusCode)")
+                print("Send message HTTP Status: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
-                print("❌ No data received when sending message")
+                print("No data received when sending message")
                 DispatchQueue.main.async { completion(false) }
                 return
             }
             
-            print("📥 Send message response: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            print("Send message response: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
             
             if let message = try? JSONDecoder().decode(Message.self, from: data) {
-                print("✅ Successfully sent message")
+                print("Successfully sent message")
                 DispatchQueue.main.async {
                     self?.messages[listingId, default: []].append(message)
                     // Refresh conversations to show the new message
@@ -143,7 +143,7 @@ final class ListingViewModel: ObservableObject {
                     completion(true)
                 }
             } else {
-                print("❌ Failed to decode sent message response")
+                print("Failed to decode sent message response")
                 DispatchQueue.main.async { completion(false) }
             }
         }.resume()
@@ -151,11 +151,11 @@ final class ListingViewModel: ObservableObject {
 
     func addListing(title: String, price: String, description: String, location: String, userId: Int, imageDataArray: [Data], completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/listings") else {
-            print("❌ Invalid URL")
+            print("Invalid URL")
             completion(false)
             return
         }
-        print("📡 Posting to: \(url)")
+        print("Posting to: \(url)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -199,35 +199,158 @@ final class ListingViewModel: ObservableObject {
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
         
         request.httpBody = body
-        print("📤 Request body size: \(body.count) bytes")
+        print("Request body size: \(body.count) bytes")
         
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
-                print("❌ Network error: \(error.localizedDescription)")
+                print("Network error: \(error.localizedDescription)")
                 DispatchQueue.main.async { completion(false) }
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("📥 HTTP Status: \(httpResponse.statusCode)")
+                print("HTTP Status: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
-                print("❌ No data received")
+                print("No data received")
                 DispatchQueue.main.async { completion(false) }
                 return
             }
             
-            print("📥 Response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            print("Response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
             
             if let listing = try? JSONDecoder().decode(Listing.self, from: data) {
-                print("✅ Successfully decoded listing: \(listing)")
+                print("Successfully decoded listing: \(listing)")
                 DispatchQueue.main.async {
-                    self?.listings.append(listing)
+                    // Refresh the entire listings array to ensure we have fresh data
+                    self?.fetchListings()
                     completion(true)
                 }
             } else {
-                print("❌ Failed to decode listing from response")
+                print("Failed to decode listing from response")
+                DispatchQueue.main.async { completion(false) }
+            }
+        }.resume()
+    }
+    
+    func updateListing(id: Int, title: String, price: String, description: String, location: String, imageDataArray: [Data]?, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "http://localhost:3001/listings/\(id)") else {
+            print("Invalid URL for updating listing")
+            completion(false)
+            return
+        }
+        print("Updating listing at: \(url)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        
+        // Create multipart form data
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        var body = Data()
+        
+        // Add text fields
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"title\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(title)\r\n".data(using: .utf8)!)
+        
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"price\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(price)\r\n".data(using: .utf8)!)
+        
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"description\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(description)\r\n".data(using: .utf8)!)
+        
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"location\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(location)\r\n".data(using: .utf8)!)
+        
+        // Add images if provided
+        if let imageDataArray = imageDataArray {
+            for (index, imageData) in imageDataArray.enumerated() {
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"images\"; filename=\"image\(index).jpg\"\r\n".data(using: .utf8)!)
+                body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+                body.append(imageData)
+                body.append("\r\n".data(using: .utf8)!)
+            }
+        }
+        
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        print("Update request body size: \(body.count) bytes")
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                print("Network error updating listing: \(error.localizedDescription)")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Update HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("No data received when updating listing")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            print("Update response data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            if let listing = try? JSONDecoder().decode(Listing.self, from: data) {
+                print("Successfully updated listing: \(listing)")
+                DispatchQueue.main.async {
+                    // Refresh the entire listings array to ensure we have fresh data
+                    self?.fetchListings()
+                    completion(true)
+                }
+            } else {
+                print("Failed to decode updated listing from response")
+                DispatchQueue.main.async { completion(false) }
+            }
+        }.resume()
+    }
+    
+    func deleteListing(id: Int, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "http://localhost:3001/listings/\(id)") else {
+            print("Invalid URL for deleting listing")
+            completion(false)
+            return
+        }
+        print("Deleting listing at: \(url)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                print("Network error deleting listing: \(error.localizedDescription)")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Delete HTTP Status: \(httpResponse.statusCode)")
+                
+                if httpResponse.statusCode == 200 {
+                    print("Successfully deleted listing")
+                    DispatchQueue.main.async {
+                        // Refresh the entire listings array to ensure we have fresh data
+                        self?.fetchListings()
+                        completion(true)
+                    }
+                } else {
+                    print("Failed to delete listing with status: \(httpResponse.statusCode)")
+                    DispatchQueue.main.async { completion(false) }
+                }
+            } else {
+                print("No HTTP response when deleting listing")
                 DispatchQueue.main.async { completion(false) }
             }
         }.resume()
@@ -235,36 +358,36 @@ final class ListingViewModel: ObservableObject {
     
     func fetchListings() {
         guard let url = URL(string: "http://localhost:3001/listings") else {
-            print("❌ Invalid URL for fetching listings")
+            print("Invalid URL for fetching listings")
             return
         }
-        print("📡 Fetching listings from: \(url)")
+        print("Fetching listings from: \(url)")
         
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             if let error = error {
-                print("❌ Network error fetching listings: \(error.localizedDescription)")
+                print("Network error fetching listings: \(error.localizedDescription)")
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("📥 HTTP Status: \(httpResponse.statusCode)")
+                print("HTTP Status: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
-                print("❌ No data received when fetching listings")
+                print("No data received when fetching listings")
                 return
             }
             
-            print("📥 Fetched listings data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            print("Fetched listings data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
             
             do {
                 let listings = try JSONDecoder().decode([Listing].self, from: data)
-                print("✅ Successfully decoded \(listings.count) listings")
+                print("Successfully decoded \(listings.count) listings")
                 DispatchQueue.main.async {
                     self?.listings = listings
                 }
             } catch {
-                print("❌ Failed to decode listings: \(error)")
+                print("Failed to decode listings: \(error)")
             }
         }.resume()
     }

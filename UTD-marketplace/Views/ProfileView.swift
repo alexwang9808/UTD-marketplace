@@ -8,6 +8,13 @@ struct ProfileView: View {
     @State private var currentUser: User?
     @State private var isUpdatingProfile = false
     @State private var showingPhotoPicker = false
+    @State private var showingAddListing = false
+    @State private var showingMyListings = false
+    
+    // Computed property to get current user's listings count
+    private var myListingsCount: Int {
+        viewModel.listings.filter { $0.userId == viewModel.currentUserId }.count
+    }
     
     var body: some View {
         NavigationView {
@@ -41,18 +48,18 @@ struct ProfileView: View {
                                         .scaledToFill()
                                 } placeholder: {
                                     Circle()
-                                        .fill(Color.blue.opacity(0.2))
+                                        .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
                                         .overlay(
                                             ProgressView()
                                         )
                                 }
                             } else {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.2))
+                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
                                     .overlay(
                                         Image(systemName: "person.fill")
                                             .font(.system(size: 40))
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                                     )
                             }
                         }
@@ -60,7 +67,7 @@ struct ProfileView: View {
                         .clipShape(Circle())
                         .overlay(
                             Circle()
-                                .stroke(Color.blue, lineWidth: 3)
+                                .stroke(Color(red: 0.0, green: 0.4, blue: 0.2), lineWidth: 3)
                         )
                         .overlay(
                             // Camera icon overlay
@@ -119,7 +126,7 @@ struct ProfileView: View {
                                 .padding(.vertical, 8)
                                 .background(
                                     viewModel.currentUserId == userId 
-                                        ? Color.blue 
+                                        ? Color(red: 0.0, green: 0.4, blue: 0.2) 
                                         : Color.gray.opacity(0.2)
                                 )
                                 .foregroundColor(
@@ -141,18 +148,66 @@ struct ProfileView: View {
                 }
                 .padding(.horizontal)
                 
-                Spacer()
-                
-                // Profile options
-                VStack(spacing: 0) {
-                    ProfileRow(icon: "person.circle", title: "Edit Profile", action: {})
-                    ProfileRow(icon: "heart", title: "Favorites", action: {})
-                    ProfileRow(icon: "clock", title: "Order History", action: {})
-                    ProfileRow(icon: "gear", title: "Settings", action: {})
-                    ProfileRow(icon: "questionmark.circle", title: "Help & Support", action: {})
+                // Add Listing Button
+                Button(action: {
+                    showingAddListing = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                        Text("Add Listing")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.orange)
+                    .cornerRadius(12)
                 }
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .padding(.horizontal)
+                
+                // My Listings Button
+                Button(action: {
+                    showingMyListings = true
+                }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Image(systemName: "list.bullet.rectangle")
+                                    .font(.title2)
+                                Text("My Listings")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                Spacer()
+                                Text("\(myListingsCount)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 4)
+                                    .background(Color.white.opacity(0.3))
+                                    .cornerRadius(12)
+                            }
+                            
+                            Text(myListingsCount == 0 ? "No listings yet" : "Manage your \(myListingsCount) listing\(myListingsCount == 1 ? "" : "s")")
+                                .font(.subheadline)
+                                .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.8))
+                        }
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3), lineWidth: 1)
+                    )
+                }
                 .padding(.horizontal)
                 
                 Spacer()
@@ -177,6 +232,12 @@ struct ProfileView: View {
                 }
             }
             .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedItem, matching: .images)
+            .sheet(isPresented: $showingAddListing) {
+                AddListingView()
+            }
+            .sheet(isPresented: $showingMyListings) {
+                MyListingsView()
+            }
         }
     }
     
@@ -209,32 +270,35 @@ struct ProfileView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         
-        // Create multipart form data
+        // Create multipart form data using string concatenation
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
-        var body = Data()
+        var bodyString = ""
         
         // Add existing user data
         if let user = currentUser {
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"email\"\r\n\r\n".data(using: .utf8)!)
-            body.append("\(user.email)\r\n".data(using: .utf8)!)
+            bodyString += "--\(boundary)\r\n"
+            bodyString += "Content-Disposition: form-data; name=\"email\"\r\n\r\n"
+            bodyString += "\(user.email)\r\n"
             
             if let name = user.name {
-                body.append("--\(boundary)\r\n".data(using: .utf8)!)
-                body.append("Content-Disposition: form-data; name=\"name\"\r\n\r\n".data(using: .utf8)!)
-                body.append("\(name)\r\n".data(using: .utf8)!)
+                bodyString += "--\(boundary)\r\n"
+                bodyString += "Content-Disposition: form-data; name=\"name\"\r\n\r\n"
+                bodyString += "\(name)\r\n"
             }
         }
         
-        // Add image
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"profile.jpg\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        // Add image header
+        bodyString += "--\(boundary)\r\n"
+        bodyString += "Content-Disposition: form-data; name=\"image\"; filename=\"profile.jpg\"\r\n"
+        bodyString += "Content-Type: image/jpeg\r\n\r\n"
+        
+        // Combine string data with image data
+        var body = Data()
+        body.append(bodyString.data(using: .utf8)!)
         body.append(imageData)
-        body.append("\r\n".data(using: .utf8)!)
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         
         request.httpBody = body
         
@@ -246,47 +310,20 @@ struct ProfileView: View {
                     DispatchQueue.main.async {
                         self.currentUser = updatedUser
                         self.isUpdatingProfile = false
-                        print("✅ Profile image updated successfully")
+                        print("Profile image updated successfully")
                     }
                 }
             } else {
                 DispatchQueue.main.async {
                     self.isUpdatingProfile = false
-                    print("❌ Failed to update profile image")
+                    print("Failed to update profile image")
                 }
             }
         } catch {
             DispatchQueue.main.async {
                 self.isUpdatingProfile = false
-                print("❌ Error updating profile image: \(error)")
+                print("Error updating profile image: \(error)")
             }
         }
-    }
-}
-
-struct ProfileRow: View {
-    let icon: String
-    let title: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(.blue)
-                    .frame(width: 24)
-                
-                Text(title)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
-                    .font(.caption)
-            }
-            .padding()
-        }
-        .background(Color(.systemBackground))
     }
 }

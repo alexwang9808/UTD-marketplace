@@ -104,7 +104,7 @@ struct ConversationDetailView: View {
                                         .padding(12)
                                         .background(
                                             isSender
-                                                ? Color.blue.opacity(0.7)
+                                                ? Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.7)
                                                 : Color.gray.opacity(0.3)
                                         )
                                         .foregroundColor(isSender ? .white : .primary)

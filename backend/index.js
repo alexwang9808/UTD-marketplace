@@ -71,9 +71,9 @@ async function sendVerificationEmail(email, name, verificationToken) {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`✅ Verification email sent to ${email}`);
+    console.log(`Verification email sent to ${email}`);
   } catch (error) {
-    console.error('❌ Error sending email:', error);
+    console.error('Error sending email:', error);
     throw error;
   }
 }
@@ -341,7 +341,7 @@ app.get('/verify-email', async (req, res) => {
     return res.status(400).send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h2 style="color: #dc2626;">❌ Invalid Verification Link</h2>
+          <h2 style="color: #dc2626;">Invalid Verification Link</h2>
           <p>This verification link is invalid or expired.</p>
         </body>
       </html>
@@ -358,7 +358,7 @@ app.get('/verify-email', async (req, res) => {
       return res.status(400).send(`
         <html>
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h2 style="color: #dc2626;">❌ Invalid Verification Link</h2>
+            <h2 style="color: #dc2626;">Invalid Verification Link</h2>
             <p>This verification link is invalid or expired.</p>
           </body>
         </html>
@@ -369,7 +369,7 @@ app.get('/verify-email', async (req, res) => {
       return res.send(`
         <html>
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-            <h2 style="color: #16a34a;">✅ Already Verified</h2>
+            <h2 style="color: #16a34a;">Already Verified</h2>
             <p>Your email address has already been verified.</p>
             <p>You can now log in to UTD Marketplace.</p>
           </body>
@@ -389,7 +389,7 @@ app.get('/verify-email', async (req, res) => {
     res.send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h2 style="color: #16a34a;">✅ Email Verified Successfully!</h2>
+          <h2 style="color: #16a34a;">Email Verified Successfully!</h2>
           <p>Your email address has been verified.</p>
           <p>You can now log in to UTD Marketplace.</p>
         </body>
@@ -401,7 +401,7 @@ app.get('/verify-email', async (req, res) => {
     res.status(500).send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h2 style="color: #dc2626;">❌ Verification Error</h2>
+          <h2 style="color: #dc2626;">Verification Error</h2>
           <p>An error occurred while verifying your email. Please try again.</p>
         </body>
       </html>
@@ -432,6 +432,59 @@ app.post('/listings', upload.array('images', 5), async (req, res) => {
     });
     res.status(201).json(listing);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update a listing
+app.put('/listings/:id', upload.array('images', 5), async (req, res) => {
+  const { id } = req.params;
+  const { title, description, price, location } = req.body;
+  
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'Invalid listing ID' });
+  }
+  
+  if (!title || !price) {
+    return res.status(400).json({ error: 'Missing required fields: title, price' });
+  }
+  
+  try {
+    // Check if listing exists
+    const existingListing = await prisma.listing.findUnique({
+      where: { id: parseInt(id) }
+    });
+    
+    if (!existingListing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    
+    // Prepare update data
+    const updateData = {
+      title,
+      description,
+      price: parseFloat(price),
+      location,
+    };
+    
+    // If new images are provided, update imageUrls
+    if (req.files && req.files.length > 0) {
+      updateData.imageUrls = req.files.map(file => `/uploads/${file.filename}`);
+    }
+    
+    const listing = await prisma.listing.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: {
+        user: true
+      }
+    });
+    
+    res.json(listing);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -476,6 +529,31 @@ app.post('/users', upload.single('image'), async (req, res) => {
     });
     res.status(201).json(user);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a listing
+app.delete('/listings/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'Invalid listing ID' });
+  }
+  try {
+    // First delete any messages associated with this listing
+    await prisma.message.deleteMany({
+      where: { listingId: parseInt(id) }
+    });
+    
+    // Then delete the listing
+    const listing = await prisma.listing.delete({
+      where: { id: parseInt(id) }
+    });
+    res.json({ message: 'Listing deleted successfully', listing });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
     res.status(500).json({ error: error.message });
   }
 });

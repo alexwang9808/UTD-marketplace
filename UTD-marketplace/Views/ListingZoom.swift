@@ -53,22 +53,6 @@ struct ListingDetailView: View {
                         }
                         .frame(height: 250)
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
-                        
-                        // Image counter
-                        if listing.imageUrls.count > 1 {
-                            HStack {
-                                Spacer()
-                                Text("\(listing.imageUrls.count) photos")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.black.opacity(0.6))
-                                    .cornerRadius(8)
-                                Spacer()
-                            }
-                            .padding(.top, 8)
-                        }
                     } else {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
@@ -97,7 +81,7 @@ struct ListingDetailView: View {
                                         .scaledToFill()
                                 } placeholder: {
                                     Circle()
-                                        .fill(Color.blue.opacity(0.2))
+                                        .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
                                         .overlay(
                                             ProgressView()
                                                 .scaleEffect(0.6)
@@ -105,11 +89,11 @@ struct ListingDetailView: View {
                                 }
                             } else {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.2))
+                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
                                     .overlay(
                                         Image(systemName: "person.fill")
                                             .font(.system(size: 16))
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                                     )
                             }
                         }
@@ -147,7 +131,7 @@ struct ListingDetailView: View {
                             .font(.body)
                     }
 
-                    // Message Composer Section
+                    // Message Composer Section (for other users' listings)
                     if let userId = listing.userId, userId != viewModel.currentUserId {
                         VStack(spacing: 12) {
                             // Success message
@@ -192,7 +176,7 @@ struct ListingDetailView: View {
                                     .background(
                                         messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage 
                                         ? Color.gray.opacity(0.3) 
-                                        : Color.blue
+                                        : Color(red: 0.0, green: 0.4, blue: 0.2)
                                     )
                                     .foregroundColor(
                                         messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage 
@@ -208,6 +192,8 @@ struct ListingDetailView: View {
                         }
                         .padding(.top)
                     }
+                    
+
                 }
                 .padding()
             }

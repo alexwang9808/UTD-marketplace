@@ -135,7 +135,7 @@ struct AddListingView: View {
                     )
                     .foregroundColor(
                         (title.isEmpty || price.isEmpty || description.isEmpty || imageDataArray.isEmpty) 
-                        ? .gray : .blue
+                        ? .gray : Color(red: 0.0, green: 0.4, blue: 0.2)
                     )
                 }
             }
