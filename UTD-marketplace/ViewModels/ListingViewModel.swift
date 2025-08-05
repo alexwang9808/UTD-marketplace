@@ -94,7 +94,7 @@ final class ListingViewModel: ObservableObject {
     }
 
     /// Sends a new message to the backend
-    func sendMessage(to listingId: Int, content: String, completion: @escaping (Bool) -> Void) {
+    func sendMessage(to listingId: Int, content: String, authToken: String?, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/messages") else {
             print("Invalid URL for sending message")
             completion(false)
@@ -106,9 +106,13 @@ final class ListingViewModel: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
+        // Add Authorization header if token is provided
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
         let body: [String: Any] = [
             "content": content,
-            "userId": currentUserId,
             "listingId": listingId
         ]
         print("Message body: \(body)")
@@ -149,7 +153,7 @@ final class ListingViewModel: ObservableObject {
         }.resume()
     }
 
-    func addListing(title: String, price: String, description: String, location: String, userId: Int, imageDataArray: [Data], completion: @escaping (Bool) -> Void) {
+    func addListing(title: String, price: String, description: String, location: String, imageDataArray: [Data], authToken: String?, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/listings") else {
             print("Invalid URL")
             completion(false)
@@ -159,6 +163,11 @@ final class ListingViewModel: ObservableObject {
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        
+        // Add authorization header if token provided
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         
         // Create multipart form data
         let boundary = UUID().uuidString
@@ -182,10 +191,6 @@ final class ListingViewModel: ObservableObject {
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"location\"\r\n\r\n".data(using: .utf8)!)
         body.append("\(location)\r\n".data(using: .utf8)!)
-        
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"userId\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(userId)\r\n".data(using: .utf8)!)
         
         // Add images if provided
         for (index, imageData) in imageDataArray.enumerated() {

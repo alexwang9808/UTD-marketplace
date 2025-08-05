@@ -3,6 +3,7 @@ import PhotosUI
 
 struct ProfileView: View {
     @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
     @State private var selectedItem: PhotosPickerItem?
     @State private var profileImage: UIImage?
     @State private var currentUser: User?
@@ -10,6 +11,7 @@ struct ProfileView: View {
     @State private var showingPhotoPicker = false
     @State private var showingAddListing = false
     @State private var showingMyListings = false
+    @State private var showingLogoutAlert = false
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
@@ -210,6 +212,32 @@ struct ProfileView: View {
                 }
                 .padding(.horizontal)
                 
+                // Logout Button
+                if authManager.isAuthenticated {
+                    Button(action: {
+                        showingLogoutAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .font(.title2)
+                            Text("Logout")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    .padding(.horizontal)
+                }
+                
                 Spacer()
                 }
                 }
@@ -237,6 +265,14 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showingMyListings) {
                 MyListingsView()
+            }
+            .alert("Logout", isPresented: $showingLogoutAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Logout", role: .destructive) {
+                    authManager.logout()
+                }
+            } message: {
+                Text("Are you sure you want to logout?")
             }
         }
     }

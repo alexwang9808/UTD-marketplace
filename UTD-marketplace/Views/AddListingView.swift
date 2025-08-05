@@ -3,6 +3,7 @@ import PhotosUI
 
 struct AddListingView: View {
     @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var title       = ""
@@ -12,6 +13,7 @@ struct AddListingView: View {
     @State private var photoItems: [PhotosPickerItem] = []
     @State private var imageDataArray: [Data] = []
     @State private var showPriceError = false
+    @State private var showingAuthentication = false
 
     // Dropdown options
     private let locations = [
@@ -28,7 +30,69 @@ struct AddListingView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            if authManager.isAuthenticated {
+                authenticatedView
+            } else {
+                // Unauthenticated view inline
+                VStack(spacing: 30) {
+                    Spacer()
+                    
+                    VStack(spacing: 20) {
+                        Image(systemName: "plus.circle")
+                            .font(.system(size: 60))
+                            .foregroundColor(.orange)
+                        
+                        VStack(spacing: 8) {
+                            Text("Login Required")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Text("You need to be logged in to create a listing")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    
+                    Button(action: {
+                        showingAuthentication = true
+                    }) {
+                        Text("Login to Create Listing")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.orange)
+                            .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 40)
+                    
+                    Spacer()
+                }
+                .background(Color(.systemGroupedBackground))
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") { dismiss() }
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingAuthentication) {
+            AuthenticationView()
+        }
+        .task(id: photoItems) {
+            imageDataArray.removeAll()
+            for item in photoItems {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    imageDataArray.append(data)
+                }
+            }
+        }
+    }
+    
+    private var authenticatedView: some View {
+        Form {
                 Section("Photos") {
                     PhotosPicker(
                         selection: $photoItems,
@@ -119,8 +183,8 @@ struct AddListingView: View {
                             price: price,
                             description: description,
                             location: location,
-                            userId: viewModel.currentUserId,
-                            imageDataArray: imageDataArray
+                            imageDataArray: imageDataArray,
+                            authToken: authManager.authToken
                         ) { success in
                             print("Add listing success: \(success)")
                             if success { dismiss() }
@@ -140,13 +204,5 @@ struct AddListingView: View {
                 }
             }
         }
-        .task(id: photoItems) {
-            imageDataArray.removeAll()
-            for item in photoItems {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    imageDataArray.append(data)
-                }
-            }
-        }
     }
-}
+

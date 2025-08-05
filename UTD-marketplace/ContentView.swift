@@ -34,4 +34,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(ListingViewModel())
+        .environmentObject(AuthenticationManager())
 }

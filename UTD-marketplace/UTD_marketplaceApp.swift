@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct UTD_marketplaceApp: App {
+    @StateObject private var authManager = AuthenticationManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(authManager)
         }
     }
 }

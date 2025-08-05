@@ -4,9 +4,11 @@ struct ListingDetailView: View {
     let listing: Listing
 
     @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
     @State private var messageText = ""
     @State private var isSendingMessage = false
     @State private var showSuccessMessage = false
+    @State private var showingAuthentication = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -148,47 +150,85 @@ struct ListingDetailView: View {
                                 .cornerRadius(8)
                             }
                             
-                            // Message composer
-                            VStack(spacing: 8) {
-                                Text("Send a message to \(listing.user?.name ?? "User \(userId)")")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                
-                                HStack(spacing: 12) {
-                                    TextField("Type your message...", text: $messageText, axis: .vertical)
-                                        .textFieldStyle(.roundedBorder)
-                                        .lineLimit(1...3)
-                                        .disabled(isSendingMessage)
+                            if authManager.isAuthenticated {
+                                // Message composer for authenticated users
+                                VStack(spacing: 8) {
+                                    Text("Send a message to \(listing.user?.name ?? "User \(userId)")")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     
-                                    Button {
-                                        sendMessage()
-                                    } label: {
-                                        if isSendingMessage {
-                                            ProgressView()
-                                                .scaleEffect(0.8)
-                                        } else {
-                                            Image(systemName: "paperplane.fill")
+                                    HStack(spacing: 12) {
+                                        TextField("Type your message...", text: $messageText, axis: .vertical)
+                                            .textFieldStyle(.roundedBorder)
+                                            .lineLimit(1...3)
+                                            .disabled(isSendingMessage)
+                                        
+                                        Button {
+                                            sendMessage()
+                                        } label: {
+                                            if isSendingMessage {
+                                                ProgressView()
+                                                    .scaleEffect(0.8)
+                                            } else {
+                                                Image(systemName: "paperplane.fill")
+                                            }
                                         }
+                                        .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage)
+                                        .padding(8)
+                                        .background(
+                                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage 
+                                            ? Color.gray.opacity(0.3) 
+                                            : Color(red: 0.0, green: 0.4, blue: 0.2)
+                                        )
+                                        .foregroundColor(
+                                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage 
+                                            ? .secondary 
+                                            : .white
+                                        )
+                                        .cornerRadius(8)
                                     }
-                                    .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage)
-                                    .padding(8)
-                                    .background(
-                                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage 
-                                        ? Color.gray.opacity(0.3) 
-                                        : Color(red: 0.0, green: 0.4, blue: 0.2)
-                                    )
-                                    .foregroundColor(
-                                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage 
-                                        ? .secondary 
-                                        : .white
-                                    )
-                                    .cornerRadius(8)
                                 }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
+                            } else {
+                                // Login prompt for unauthenticated users
+                                VStack(spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "lock.circle")
+                                            .font(.title2)
+                                            .foregroundColor(.orange)
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Login Required")
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                            Text("Sign in to message \(listing.user?.name ?? "the seller")")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Spacer()
+                                    }
+                                    
+                                    Button(action: {
+                                        showingAuthentication = true
+                                    }) {
+                                        Text("Login to Send Message")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(Color.orange)
+                                            .cornerRadius(8)
+                                    }
+                                }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
                             }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
                         }
                         .padding(.top)
                     }
@@ -200,6 +240,9 @@ struct ListingDetailView: View {
         }
         .navigationTitle("Listing")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingAuthentication) {
+            AuthenticationView()
+        }
     }
     
     private func sendMessage() {
@@ -212,7 +255,8 @@ struct ListingDetailView: View {
         
         viewModel.sendMessage(
             to: listingId,
-            content: messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+            content: messageText.trimmingCharacters(in: .whitespacesAndNewlines),
+            authToken: authManager.authToken
         ) { success in
             DispatchQueue.main.async {
                 isSendingMessage = false

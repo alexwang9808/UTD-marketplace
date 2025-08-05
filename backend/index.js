@@ -40,6 +40,44 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Helper function to send password reset email
+async function sendPasswordResetEmail(email, name, resetToken) {
+  const resetUrl = `${process.env.BASE_URL}/reset-password?token=${resetToken}`;
+  
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: 'Reset your UTD Marketplace password',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #dc2626;">Reset Your Password</h2>
+        <p>Hi ${name || 'there'},</p>
+        <p>You requested a password reset for your UTD Marketplace account. Click the button below to set a new password:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" 
+             style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+            Reset Password
+          </a>
+        </div>
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #6b7280;">${resetUrl}</p>
+        <p style="color: #dc2626; font-weight: bold;">This link will expire in 1 hour.</p>
+        <p>If you didn't request this password reset, you can safely ignore this email.</p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 14px;">UTD Marketplace Team</p>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Password reset email sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending reset email:', error);
+    throw error;
+  }
+}
+
 // Helper function to send verification email
 async function sendVerificationEmail(email, name, verificationToken) {
   const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${verificationToken}`;
@@ -333,6 +371,98 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
+// Forgot password endpoint
+app.post('/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({ message: 'If an account with this email exists, a password reset link has been sent.' });
+    }
+
+    // Generate reset token (expires in 1 hour)
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+    // Update user with reset token
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetToken,
+        resetTokenExpiry
+      }
+    });
+
+    // Send reset email
+    await sendPasswordResetEmail(email, user.name, resetToken);
+
+    res.json({ message: 'If an account with this email exists, a password reset link has been sent.' });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset password endpoint
+app.post('/auth/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token and new password are required' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+  }
+
+  try {
+    // Find user with valid reset token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: {
+          gt: new Date() // Token not expired
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user password and clear reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      }
+    });
+
+    res.json({ message: 'Password reset successful' });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Email verification endpoint
 app.get('/verify-email', async (req, res) => {
   const { token } = req.query;
@@ -410,10 +540,10 @@ app.get('/verify-email', async (req, res) => {
 });
 
 // Create a new listing
-app.post('/listings', upload.array('images', 5), async (req, res) => {
-  const { title, description, price, userId, location } = req.body;
-  if (!title || !price || !userId) {
-    return res.status(400).json({ error: 'Missing required fields: title, price, userId' });
+app.post('/listings', authenticateToken, upload.array('images', 5), async (req, res) => {
+  const { title, description, price, location } = req.body;
+  if (!title || !price) {
+    return res.status(400).json({ error: 'Missing required fields: title, price' });
   }
   try {
     const imageUrls = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
@@ -422,7 +552,7 @@ app.post('/listings', upload.array('images', 5), async (req, res) => {
         title,
         description,
         price: parseFloat(price),
-        userId: parseInt(userId),
+        userId: req.user.userId, // Use authenticated user's ID
         location,
         imageUrls,
       },
@@ -437,7 +567,7 @@ app.post('/listings', upload.array('images', 5), async (req, res) => {
 });
 
 // Update a listing
-app.put('/listings/:id', upload.array('images', 5), async (req, res) => {
+app.put('/listings/:id', authenticateToken, upload.array('images', 5), async (req, res) => {
   const { id } = req.params;
   const { title, description, price, location } = req.body;
   
@@ -450,13 +580,18 @@ app.put('/listings/:id', upload.array('images', 5), async (req, res) => {
   }
   
   try {
-    // Check if listing exists
+    // Check if listing exists and user owns it
     const existingListing = await prisma.listing.findUnique({
       where: { id: parseInt(id) }
     });
     
     if (!existingListing) {
       return res.status(404).json({ error: 'Listing not found' });
+    }
+    
+    // Check ownership
+    if (existingListing.userId !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only edit your own listings' });
     }
     
     // Prepare update data
@@ -490,16 +625,16 @@ app.put('/listings/:id', upload.array('images', 5), async (req, res) => {
 });
 
 // Create a new message
-app.post('/messages', async (req, res) => {
-  const { content, userId, listingId } = req.body;
-  if (!content || !userId || !listingId) {
-    return res.status(400).json({ error: 'Missing required fields: content, userId, listingId' });
+app.post('/messages', authenticateToken, async (req, res) => {
+  const { content, listingId } = req.body;
+  if (!content || !listingId) {
+    return res.status(400).json({ error: 'Missing required fields: content, listingId' });
   }
   try {
     const message = await prisma.message.create({
       data: {
         content,
-        userId: parseInt(userId),
+        userId: req.user.userId, // Use authenticated user's ID
         listingId: parseInt(listingId),
       },
       include: {
@@ -534,12 +669,26 @@ app.post('/users', upload.single('image'), async (req, res) => {
 });
 
 // Delete a listing
-app.delete('/listings/:id', async (req, res) => {
+app.delete('/listings/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   if (!id || isNaN(parseInt(id))) {
     return res.status(400).json({ error: 'Invalid listing ID' });
   }
   try {
+    // Check if listing exists and user owns it
+    const existingListing = await prisma.listing.findUnique({
+      where: { id: parseInt(id) }
+    });
+    
+    if (!existingListing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    
+    // Check ownership
+    if (existingListing.userId !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only delete your own listings' });
+    }
+    
     // First delete any messages associated with this listing
     await prisma.message.deleteMany({
       where: { listingId: parseInt(id) }

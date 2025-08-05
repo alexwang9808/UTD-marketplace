@@ -7,6 +7,8 @@ struct ConversationDetailView: View {
     let otherUser: User?
     
     @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
+
     @State private var newMessage = ""
     
     // Computed properties to handle both cases
@@ -141,7 +143,7 @@ struct ConversationDetailView: View {
                     let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !text.isEmpty else { return }
                     
-                    viewModel.sendMessage(to: listingId, content: text) { success in
+                    viewModel.sendMessage(to: listingId, content: text, authToken: authManager.authToken) { success in
                         if success {
                             newMessage = ""
                         }
