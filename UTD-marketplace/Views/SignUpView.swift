@@ -120,7 +120,7 @@ struct SignUpView: View {
         !name.isEmpty &&
         email.hasSuffix("@utdallas.edu") &&
         email.count > "@utdallas.edu".count &&
-        password.count >= 6 &&
+        !password.isEmpty &&
         password == confirmPassword
     }
     

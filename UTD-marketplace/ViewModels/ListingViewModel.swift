@@ -5,23 +5,12 @@ final class ListingViewModel: ObservableObject {
     @Published var messages: [Int: [Message]] = [:]
     @Published var conversations: [Conversation] = []
     
-    // Current user ID - can be changed for testing
-    @Published var currentUserId = 1
-    
-    // Development helper - switch between test users
-    func switchUser(to userId: Int) {
-        currentUserId = userId
-        // Clear cached data when switching users
-        conversations = []
-        messages = [:]
-        print("Switched to user ID: \(userId)")
-        // Refresh data for new user
-        fetchConversations()
-    }
 
-    /// Fetches conversations for the current user
-    func fetchConversations() {
-        guard let url = URL(string: "http://localhost:3001/users/\(currentUserId)/conversations") else {
+
+    /// Fetches conversations for the specified user
+    func fetchConversations(for userId: Int? = nil) {
+        guard let userId = userId,
+              let url = URL(string: "http://localhost:3001/users/\(userId)/conversations") else {
             print("Invalid URL for fetching conversations")
             return
         }

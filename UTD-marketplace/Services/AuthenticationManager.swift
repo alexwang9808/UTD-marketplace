@@ -61,7 +61,7 @@ class AuthenticationManager: ObservableObject {
     }
 }
 
-struct AuthUser: Codable {
+struct AuthUser: Codable, Equatable {
     let id: Int
     let email: String
     let name: String?

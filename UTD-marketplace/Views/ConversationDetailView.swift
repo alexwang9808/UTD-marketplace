@@ -98,7 +98,7 @@ struct ConversationDetailView: View {
                     } else {
                         ForEach(displayMessages.sorted { $0.createdAt < $1.createdAt }) { message in
                             HStack {
-                                let isSender = message.isFromCurrentUser(currentUserId: viewModel.currentUserId)
+                                let isSender = message.isFromCurrentUser(currentUserId: authManager.currentUser?.id ?? -1)
                                 if isSender { Spacer() }
                                 
                                 VStack(alignment: isSender ? .trailing : .leading, spacing: 4) {

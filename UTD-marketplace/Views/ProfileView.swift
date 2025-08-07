@@ -15,7 +15,8 @@ struct ProfileView: View {
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
-        viewModel.listings.filter { $0.userId == viewModel.currentUserId }.count
+        guard let currentUserId = authManager.currentUser?.id else { return 0 }
+        return viewModel.listings.filter { $0.userId == currentUserId }.count
     }
     
     var body: some View {
@@ -29,217 +30,12 @@ struct ProfileView: View {
                     .padding(.top, -10)
                 
                 ScrollView {
-                VStack(spacing: 20) {
-                // Profile header
-                VStack(spacing: 16) {
-                    // Profile picture with tap gesture
-                    Button(action: {
-                        showingPhotoPicker = true
-                    }) {
-                        Group {
-                            if let profileImage = profileImage {
-                                Image(uiImage: profileImage)
-                                    .resizable()
-                                    .scaledToFill()
-                            } else if let user = currentUser, 
-                                      let imageUrl = user.imageUrl,
-                                      let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                                AsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } placeholder: {
-                                    Circle()
-                                        .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
-                                        .overlay(
-                                            ProgressView()
-                                        )
-                                }
-                            } else {
-                                Circle()
-                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
-                                    .overlay(
-                                        Image(systemName: "person.fill")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
-                                    )
-                            }
-                        }
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color(red: 0.0, green: 0.4, blue: 0.2), lineWidth: 3)
-                        )
-                        .overlay(
-                            // Camera icon overlay
-                            Circle()
-                                .fill(Color.black.opacity(0.6))
-                                .frame(width: 30, height: 30)
-                                .overlay(
-                                    Image(systemName: "camera.fill")
-                                        .foregroundColor(.white)
-                                        .font(.system(size: 12))
-                                )
-                                .offset(x: 25, y: 25)
-                        )
-                        .scaleEffect(isUpdatingProfile ? 0.95 : 1.0)
-                        .animation(.easeInOut(duration: 0.1), value: isUpdatingProfile)
-                    }
-                    
-                    Text(currentUser?.name ?? "User \(viewModel.currentUserId)")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    
-                    Text(currentUser?.email ?? "user\(viewModel.currentUserId)@utdallas.edu")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    if isUpdatingProfile {
-                        HStack {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                            Text("Updating profile...")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(.top)
-                
-                // Development Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Development Tools")
-                        .font(.headline)
-                        .padding(.horizontal)
-                    
-                    VStack(spacing: 8) {
-                        Text("Switch User (for testing)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                    VStack(spacing: 20) {
+                        profileHeaderView
+                        actionButtonsView
                         
-                        HStack(spacing: 12) {
-                            ForEach(1...4, id: \.self) { userId in
-                                Button("User \(userId)") {
-                                    viewModel.switchUser(to: userId)
-                                    fetchCurrentUser()
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(
-                                    viewModel.currentUserId == userId 
-                                        ? Color(red: 0.0, green: 0.4, blue: 0.2) 
-                                        : Color.gray.opacity(0.2)
-                                )
-                                .foregroundColor(
-                                    viewModel.currentUserId == userId 
-                                        ? .white 
-                                        : .primary
-                                )
-                                .cornerRadius(8)
-                            }
-                        }
+                        Spacer()
                     }
-                    .padding()
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                    )
-                }
-                .padding(.horizontal)
-                
-                // Add Listing Button
-                Button(action: {
-                    showingAddListing = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                        Text("Add Listing")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.orange)
-                    .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                
-                // My Listings Button
-                Button(action: {
-                    showingMyListings = true
-                }) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Image(systemName: "list.bullet.rectangle")
-                                    .font(.title2)
-                                Text("My Listings")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Text("\(myListingsCount)")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 4)
-                                    .background(Color.white.opacity(0.3))
-                                    .cornerRadius(12)
-                            }
-                            
-                            Text(myListingsCount == 0 ? "No listings yet" : "Manage your \(myListingsCount) listing\(myListingsCount == 1 ? "" : "s")")
-                                .font(.subheadline)
-                                .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.8))
-                        }
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3), lineWidth: 1)
-                    )
-                }
-                .padding(.horizontal)
-                
-                // Logout Button
-                if authManager.isAuthenticated {
-                    Button(action: {
-                        showingLogoutAlert = true
-                    }) {
-                        HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                                .font(.title2)
-                            Text("Logout")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            Spacer()
-                        }
-                        .foregroundColor(.red)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
-                        )
-                    }
-                    .padding(.horizontal)
-                }
-                
-                Spacer()
-                }
                 }
             }
             .toolbar {
@@ -248,6 +44,9 @@ struct ProfileView: View {
                 }
             }
             .onAppear {
+                fetchCurrentUser()
+            }
+            .onChange(of: authManager.currentUser) {
                 fetchCurrentUser()
             }
             .onChange(of: selectedItem) {
@@ -277,34 +76,203 @@ struct ProfileView: View {
         }
     }
     
-    private func fetchCurrentUser() {
-        guard let url = URL(string: "http://localhost:3001/users") else { return }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else { return }
-            
-            do {
-                let users = try JSONDecoder().decode([User].self, from: data)
-                DispatchQueue.main.async {
-                    self.currentUser = users.first { $0.id == viewModel.currentUserId }
-                    self.profileImage = nil // Reset local image when switching users
+    private var profileHeaderView: some View {
+        VStack(spacing: 16) {
+            // Profile picture with tap gesture
+            Button(action: {
+                showingPhotoPicker = true
+            }) {
+                Group {
+                    if let profileImage = profileImage {
+                        Image(uiImage: profileImage)
+                            .resizable()
+                            .scaledToFill()
+                    } else if let user = currentUser, 
+                              let imageUrl = user.imageUrl,
+                              let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } placeholder: {
+                            Circle()
+                                .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                .overlay(
+                                    ProgressView()
+                                )
+                        }
+                    } else {
+                        Circle()
+                            .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                            )
+                    }
                 }
-            } catch {
-                print("Failed to fetch users: \(error)")
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(Color(red: 0.0, green: 0.4, blue: 0.2), lineWidth: 3)
+                )
+                .overlay(
+                    // Camera icon overlay
+                    Circle()
+                        .fill(Color.black.opacity(0.6))
+                        .frame(width: 30, height: 30)
+                        .overlay(
+                            Image(systemName: "camera.fill")
+                                .foregroundColor(.white)
+                                .font(.system(size: 12))
+                        )
+                        .offset(x: 25, y: 25)
+                )
+                .scaleEffect(isUpdatingProfile ? 0.95 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: isUpdatingProfile)
             }
-        }.resume()
+            
+            Text(currentUser?.name ?? "Unknown User")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Text(currentUser?.email ?? "No email")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            if isUpdatingProfile {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Updating profile...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(.top)
+    }
+    
+    private var actionButtonsView: some View {
+        VStack(spacing: 16) {
+            // Add Listing Button
+            Button(action: {
+                showingAddListing = true
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                    Text("Add Listing")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.orange)
+                .cornerRadius(12)
+            }
+            .padding(.horizontal)
+            
+            // My Listings Button
+            Button(action: {
+                showingMyListings = true
+            }) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: "list.bullet.rectangle")
+                                .font(.title2)
+                            Text("My Listings")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Text("\(myListingsCount)")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 4)
+                                .background(Color.white.opacity(0.3))
+                                .cornerRadius(12)
+                        }
+                        
+                        Text(myListingsCount == 0 ? "No listings yet" : "Manage your \(myListingsCount) listing\(myListingsCount == 1 ? "" : "s")")
+                            .font(.subheadline)
+                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.8))
+                    }
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3), lineWidth: 1)
+                )
+            }
+            .padding(.horizontal)
+            
+            // Logout Button
+            if authManager.isAuthenticated {
+                Button(action: {
+                    showingLogoutAlert = true
+                }) {
+                    HStack {
+                        Image(systemName: "power")
+                            .font(.title2)
+                        Text("Logout")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red)
+                    .cornerRadius(12)
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+    
+    private func fetchCurrentUser() {
+        // Use the authenticated user's information
+        if let authUser = authManager.currentUser {
+            // Convert AuthUser to User for the profile display
+            self.currentUser = User(
+                id: authUser.id,
+                email: authUser.email,
+                name: authUser.name,
+                imageUrl: authUser.imageUrl
+            )
+        } else {
+            self.currentUser = nil
+        }
+        self.profileImage = nil // Reset local image
     }
     
     private func updateProfileImage(imageData: Data) async {
         isUpdatingProfile = true
         
-        guard let url = URL(string: "http://localhost:3001/users/\(viewModel.currentUserId)") else {
+        guard let currentUserId = authManager.currentUser?.id,
+              let url = URL(string: "http://localhost:3001/users/\(currentUserId)") else {
             isUpdatingProfile = false
             return
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
+        
+        // Add authentication header
+        if let authToken = authManager.authToken {
+            request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        }
         
         // Create multipart form data using string concatenation
         let boundary = UUID().uuidString
@@ -330,22 +298,29 @@ struct ProfileView: View {
         bodyString += "Content-Disposition: form-data; name=\"image\"; filename=\"profile.jpg\"\r\n"
         bodyString += "Content-Type: image/jpeg\r\n\r\n"
         
-        // Combine string data with image data
-        var body = Data()
-        body.append(bodyString.data(using: .utf8)!)
-        body.append(imageData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        var bodyData = Data(bodyString.utf8)
+        bodyData.append(imageData)
+        bodyData.append(Data("\r\n--\(boundary)--\r\n".utf8))
         
-        request.httpBody = body
+        request.httpBody = bodyData
         
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                if let updatedUser = try? JSONDecoder().decode(User.self, from: data) {
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let imageUrl = json["imageUrl"] as? String {
                     DispatchQueue.main.async {
-                        self.currentUser = updatedUser
                         self.isUpdatingProfile = false
+                        // Update the current user's image URL
+                        if let user = self.currentUser {
+                            self.currentUser = User(
+                                id: user.id,
+                                email: user.email,
+                                name: user.name,
+                                imageUrl: imageUrl
+                            )
+                        }
                         print("Profile image updated successfully")
                     }
                 }
@@ -362,4 +337,10 @@ struct ProfileView: View {
             }
         }
     }
+}
+
+#Preview {
+    ProfileView()
+        .environmentObject(ListingViewModel())
+        .environmentObject(AuthenticationManager())
 }

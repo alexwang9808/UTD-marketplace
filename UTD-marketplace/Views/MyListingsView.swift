@@ -2,12 +2,14 @@ import SwiftUI
 
 struct MyListingsView: View {
     @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
     @Environment(\.dismiss) private var dismiss
     @State private var selectedListingToEdit: Listing?
     
     // Computed property to get current user's listings
     private var myListings: [Listing] {
-        viewModel.listings.filter { $0.userId == viewModel.currentUserId }
+        guard let currentUserId = authManager.currentUser?.id else { return [] }
+        return viewModel.listings.filter { $0.userId == currentUserId }
     }
     
     var body: some View {
@@ -152,4 +154,5 @@ struct MyListingsView: View {
 #Preview {
     MyListingsView()
         .environmentObject(ListingViewModel())
+        .environmentObject(AuthenticationManager())
 }

@@ -134,7 +134,9 @@ struct ListingDetailView: View {
                     }
 
                     // Message Composer Section (for other users' listings)
-                    if let userId = listing.userId, userId != viewModel.currentUserId {
+                    if let userId = listing.userId, 
+                       let currentUserId = authManager.currentUser?.id,
+                       userId != currentUserId {
                         VStack(spacing: 12) {
                             // Success message
                             if showSuccessMessage {

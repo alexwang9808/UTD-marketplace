@@ -2,7 +2,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var viewModel = ListingViewModel()
+    @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
 
     var body: some View {
         TabView {
@@ -24,10 +25,16 @@ struct ContentView: View {
                     Text("Profile")
                 }
         }
-        .environmentObject(viewModel)
         .onAppear {
             viewModel.fetchListings()
-            viewModel.fetchConversations()
+            if let userId = authManager.currentUser?.id {
+                viewModel.fetchConversations(for: userId)
+            }
+        }
+        .onChange(of: authManager.currentUser) {
+            if let userId = authManager.currentUser?.id {
+                viewModel.fetchConversations(for: userId)
+            }
         }
     }
 }
