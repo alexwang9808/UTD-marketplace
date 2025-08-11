@@ -12,7 +12,7 @@ class AuthenticationManager: ObservableObject {
     
     func checkAuthenticationStatus() {
         if let token = UserDefaults.standard.string(forKey: "auth_token"),
-           let userId = UserDefaults.standard.object(forKey: "current_user_id") as? Int {
+           let _ = UserDefaults.standard.object(forKey: "current_user_id") as? Int {
             self.authToken = token
             self.isAuthenticated = true
             
@@ -22,7 +22,7 @@ class AuthenticationManager: ObservableObject {
                 self.currentUser = user
             }
             
-            print("User authenticated: ID \(userId)")
+            // User authenticated from stored session
         }
     }
     
@@ -39,7 +39,7 @@ class AuthenticationManager: ObservableObject {
             UserDefaults.standard.set(userData, forKey: "current_user_data")
         }
         
-        print("Login successful: \(user.email)")
+        // Login successful
     }
     
     func logout() {
@@ -52,7 +52,7 @@ class AuthenticationManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "current_user_id")
         UserDefaults.standard.removeObject(forKey: "current_user_data")
         
-        print("User logged out")
+        // User logged out
     }
     
     func getAuthHeaders() -> [String: String] {

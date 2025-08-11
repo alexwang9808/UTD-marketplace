@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MessagesView: View {
     @EnvironmentObject var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
 
     var body: some View {
         NavigationView {
@@ -13,8 +14,70 @@ struct MessagesView: View {
                     .edgesIgnoringSafeArea(.horizontal)
                     .padding(.top, -10)
                 
-                VStack(spacing: 20) {
-                if viewModel.conversations.isEmpty {
+                if authManager.isAuthenticated {
+                    VStack(spacing: 20) {
+                        if viewModel.conversations.isEmpty {
+                            VStack(spacing: 16) {
+                                Text("No conversations yet.")
+                                    .font(.title3)
+                                    .foregroundColor(.black)
+                                Text("Send a message on a listing to start a conversation!")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            List(viewModel.conversations) { conversation in
+                                NavigationLink {
+                                    ConversationDetailView(conversation: conversation)
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        // Profile image or placeholder
+                                        if let imageUrl = conversation.otherUser.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                            AsyncImage(url: url) { image in
+                                                image
+                                                    .resizable()
+                                                    .frame(width: 40, height: 40)
+                                                    .clipShape(Circle())
+                                            } placeholder: {
+                                                Image(systemName: "person.circle.fill")
+                                                    .resizable()
+                                                    .frame(width: 40, height: 40)
+                                                    .foregroundColor(.gray)
+                                            }
+                                        } else {
+                                            Image(systemName: "person.circle.fill")
+                                                .resizable()
+                                                .frame(width: 40, height: 40)
+                                                .foregroundColor(.gray)
+                                        }
+                                        
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            HStack {
+                                                Text("\(conversation.otherUser.name ?? conversation.otherUser.email) · \(conversation.listing.title)")
+                                                    .font(.headline)
+                                                    .lineLimit(1)
+                                                Spacer()
+                                                Text(formatDate(conversation.lastMessage.createdAt))
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Text(conversation.lastMessage.content)
+                                                .font(.subheadline)
+                                                .lineLimit(2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                            }
+                            .listStyle(.plain)
+                        }
+                    }
+                } else {
+                    // Anonymous user view - simple empty state
                     VStack(spacing: 16) {
                         Text("No conversations yet.")
                             .font(.title3)
@@ -25,53 +88,6 @@ struct MessagesView: View {
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List(viewModel.conversations) { conversation in
-                        NavigationLink {
-                            ConversationDetailView(conversation: conversation)
-                        } label: {
-                    HStack(spacing: 12) {
-                                // Profile image or placeholder
-                                if let imageUrl = conversation.otherUser.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                                    AsyncImage(url: url) { image in
-                                        image
-                                            .resizable()
-                                            .frame(width: 40, height: 40)
-                                            .clipShape(Circle())
-                                    } placeholder: {
-                                        Image(systemName: "person.circle.fill")
-                                            .resizable()
-                                            .frame(width: 40, height: 40)
-                                            .foregroundColor(.gray)
-                                    }
-                                } else {
-                                    Image(systemName: "person.circle.fill")
-                            .resizable()
-                                        .frame(width: 40, height: 40)
-                                        .foregroundColor(.gray)
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Text("\(conversation.otherUser.name ?? conversation.otherUser.email) · \(conversation.listing.title)")
-                                            .font(.headline)
-                                            .lineLimit(1)
-                                        Spacer()
-                                        Text(formatDate(conversation.lastMessage.createdAt))
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    Text(conversation.lastMessage.content)
-                                        .font(.subheadline)
-                                        .lineLimit(2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                        }
-                }
-                .listStyle(.plain)
                 }
             }
             .toolbar {
@@ -80,9 +96,12 @@ struct MessagesView: View {
                 }
                             }
             }
+
             .onAppear {
-            viewModel.fetchConversations()
-        }
+                if authManager.isAuthenticated, let userId = authManager.currentUser?.id {
+                    viewModel.fetchConversations(for: userId)
+                }
+            }
         }
     }
     
@@ -99,5 +118,4 @@ struct MessagesView: View {
         displayFormatter.timeStyle = .short
         
         return displayFormatter.string(from: date)
-    }
 }

@@ -103,9 +103,6 @@ struct ListingDetailView: View {
                         .clipShape(Circle())
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Seller")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
                             Text(listing.user?.name ?? "User \(listing.userId ?? 0)")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
