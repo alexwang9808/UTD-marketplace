@@ -21,7 +21,7 @@ struct MessagesView: View {
                                 Text("No conversations yet.")
                                     .font(.title3)
                                     .foregroundColor(.black)
-                                Text("Send a message on a listing to start a conversation!")
+                                Text("Send a message to start a new conversation!")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
