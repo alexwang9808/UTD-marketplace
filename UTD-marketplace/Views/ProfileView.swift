@@ -137,10 +137,6 @@ struct ProfileView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text(currentUser?.email ?? "No email")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
             if isUpdatingProfile {
                 HStack {
                     ProgressView()
