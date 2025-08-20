@@ -12,6 +12,7 @@ struct ProfileView: View {
     @State private var showingAddListing = false
     @State private var showingMyListings = false
     @State private var showingLogoutAlert = false
+    @State private var animateGradient = false
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
@@ -21,20 +22,41 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Orange line right below navigation bar
-                Rectangle()
-                    .fill(Color.orange)
+            ZStack {
+                // Modern gradient background
+                LinearGradient(
+                    colors: [
+                        Color.blue.opacity(0.03),
+                        Color.purple.opacity(0.03),
+                        Color.pink.opacity(0.03)
+                    ],
+                    startPoint: animateGradient ? .topLeading : .bottomTrailing,
+                    endPoint: animateGradient ? .bottomTrailing : .topLeading
+                )
+                .ignoresSafeArea()
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
+                        animateGradient.toggle()
+                    }
+                }
+                
+                VStack(spacing: 0) {
+                    // Modern orange accent bar
+                    LinearGradient(
+                        colors: [Color.orange, Color.orange.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                     .frame(height: 4)
                     .edgesIgnoringSafeArea(.horizontal)
                     .padding(.top, -10)
-                
-                ScrollView {
-                    VStack(spacing: 20) {
-                        profileHeaderView
-                        actionButtonsView
-                        
-                        Spacer()
+                    
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            modernProfileHeader
+                            modernActionButtons
+                        }
+                        .padding(.top, 20)
                     }
                 }
             }
@@ -76,12 +98,39 @@ struct ProfileView: View {
         }
     }
     
-    private var profileHeaderView: some View {
-        VStack(spacing: 16) {
-            // Profile picture with tap gesture
-            Button(action: {
-                showingPhotoPicker = true
-            }) {
+    // MARK: - Modern Profile Header
+    private var modernProfileHeader: some View {
+        VStack(spacing: 20) {
+            // Profile picture with modern styling
+            modernProfilePicture
+            
+            // User info
+            VStack(spacing: 8) {
+                Text(currentUser?.name ?? "Unknown User")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                if isUpdatingProfile {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Updating profile...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+    }
+    
+    private var modernProfilePicture: some View {
+        Button(action: {
+            showingPhotoPicker = true
+        }) {
+            ZStack {
+                // Profile image
                 Group {
                     if let profileImage = profileImage {
                         Image(uiImage: profileImage)
@@ -96,145 +145,204 @@ struct ProfileView: View {
                                 .scaledToFill()
                         } placeholder: {
                             Circle()
-                                .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .overlay(
                                     ProgressView()
+                                        .scaleEffect(1.2)
                                 )
                         }
                     } else {
                         Circle()
-                            .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
                             .overlay(
                                 Image(systemName: "person.fill")
-                                    .font(.system(size: 40))
+                                    .font(.system(size: 50))
                                     .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                             )
                     }
                 }
-                .frame(width: 100, height: 100)
+                .frame(width: 120, height: 120)
                 .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(Color(red: 0.0, green: 0.4, blue: 0.2), lineWidth: 3)
-                )
-                .overlay(
-                    // Camera icon overlay
-                    Circle()
-                        .fill(Color.black.opacity(0.6))
-                        .frame(width: 30, height: 30)
-                        .overlay(
-                            Image(systemName: "camera.fill")
-                                .foregroundColor(.white)
-                                .font(.system(size: 12))
-                        )
-                        .offset(x: 25, y: 25)
-                )
-                .scaleEffect(isUpdatingProfile ? 0.95 : 1.0)
-                .animation(.easeInOut(duration: 0.1), value: isUpdatingProfile)
+                .shadow(color: Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3), radius: 12, x: 0, y: 6)
+                
+                // Modern camera overlay
+                Circle()
+                    .fill(Color.black.opacity(0.7))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: "camera.fill")
+                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                    )
+                    .offset(x: 35, y: 35)
+                    .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
             }
-            
-            Text(currentUser?.name ?? "Unknown User")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            if isUpdatingProfile {
-                HStack {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                    Text("Updating profile...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
+            .scaleEffect(isUpdatingProfile ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: isUpdatingProfile)
         }
-        .padding(.top)
     }
     
-    private var actionButtonsView: some View {
+    // MARK: - Modern Action Buttons
+    private var modernActionButtons: some View {
         VStack(spacing: 16) {
             // Add Listing Button
-            Button(action: {
-                showingAddListing = true
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
-                    Text("Add Listing")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange)
-                .cornerRadius(12)
-            }
-            .padding(.horizontal)
+            modernActionButton(
+                icon: "plus.circle.fill",
+                title: "Add Listing",
+                subtitle: "Create a new listing",
+                color: .orange,
+                action: { showingAddListing = true }
+            )
             
             // My Listings Button
-            Button(action: {
-                showingMyListings = true
-            }) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Image(systemName: "list.bullet.rectangle")
-                                .font(.title2)
-                            Text("My Listings")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Text("\(myListingsCount)")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 4)
-                                .background(Color.white.opacity(0.3))
-                                .cornerRadius(12)
-                        }
-                        
-                        Text(myListingsCount == 0 ? "No listings yet" : "Manage your \(myListingsCount) listing\(myListingsCount == 1 ? "" : "s")")
-                            .font(.subheadline)
-                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.8))
-                    }
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-                .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1))
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3), lineWidth: 1)
-                )
-            }
-            .padding(.horizontal)
+            modernMyListingsButton
             
             // Logout Button
             if authManager.isAuthenticated {
-                Button(action: {
-                    showingLogoutAlert = true
-                }) {
-                    HStack {
-                        Image(systemName: "power")
-                            .font(.title2)
-                        Text("Logout")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.red)
-                    .cornerRadius(12)
-                }
-                .padding(.horizontal)
+                modernActionButton(
+                    icon: "power",
+                    title: "Logout",
+                    subtitle: "Sign out of your account",
+                    color: .red,
+                    action: { showingLogoutAlert = true }
+                )
             }
         }
+        .padding(.horizontal, 16)
+    }
+    
+    private func modernActionButton(
+        icon: String,
+        title: String,
+        subtitle: String,
+        color: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [color, color.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 50, height: 50)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                
+                // Text content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                // Arrow
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                    .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private var modernMyListingsButton: some View {
+        Button(action: {
+            showingMyListings = true
+        }) {
+            HStack(spacing: 16) {
+                // Icon with count
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.0, green: 0.4, blue: 0.2), Color(red: 0.0, green: 0.5, blue: 0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 50, height: 50)
+                    
+                    Image(systemName: "list.bullet.rectangle")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                
+                // Text content
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text("My Listings")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                        
+                        // Count badge
+                        Text("\(myListingsCount)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2))
+                            )
+                    }
+                    
+                    Text(myListingsCount == 0 ? "No listings yet" : "Manage your \(myListingsCount) listing\(myListingsCount == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                // Arrow
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                    .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
     
     private func fetchCurrentUser() {

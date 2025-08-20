@@ -46,6 +46,7 @@ struct SignUpView: View {
                     
                     SecureField("Create a password", text: $password)
                         .textFieldStyle(.roundedBorder)
+                        .textContentType(.none)
                 }
                 
                 // Confirm Password Field
@@ -56,6 +57,7 @@ struct SignUpView: View {
                     
                     SecureField("Confirm your password", text: $confirmPassword)
                         .textFieldStyle(.roundedBorder)
+                        .textContentType(.none)
                 }
             }
             .padding(.horizontal)

@@ -7,6 +7,8 @@ struct ListingsView: View {
     @State private var searchText = ""
     @State private var isSearching = false
     @FocusState private var isSearchFieldFocused: Bool
+    @State private var animateGradient = false
+    @State private var showingSortSheet = false
 
     private let columns = [
         GridItem(.flexible()),
@@ -52,250 +54,505 @@ struct ListingsView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                                            // Clean, straight black line under nav bar
-                Rectangle()
-                    .fill(Color.orange)
+            ZStack {
+                // Modern gradient background
+                LinearGradient(
+                    colors: [
+                        Color.blue.opacity(0.03),
+                        Color.purple.opacity(0.03),
+                        Color.pink.opacity(0.03)
+                    ],
+                    startPoint: animateGradient ? .topLeading : .bottomTrailing,
+                    endPoint: animateGradient ? .bottomTrailing : .topLeading
+                )
+                .ignoresSafeArea()
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
+                        animateGradient.toggle()
+                    }
+                }
+                
+                VStack(spacing: 0) {
+                    // Modern orange accent bar
+                    LinearGradient(
+                        colors: [Color.orange, Color.orange.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                     .frame(height: 4)
                     .edgesIgnoringSafeArea(.horizontal)
-                
-                // Search and Sort buttons below orange bar
-                HStack {
-                    // Search button or search bar (left side)
-                    if isSearching {
-                        // Search bar replaces search button
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.gray)
-                            TextField("Search listings...", text: $searchText, onEditingChanged: { editing in
-                                if !editing {
-                                    // When user taps outside and loses focus, revert to search button
-                                    isSearching = false
-                                }
-                            })
-                            .textFieldStyle(PlainTextFieldStyle())
-                            .focused($isSearchFieldFocused)
-                            if !searchText.isEmpty {
-                                Button(action: {
-                                    searchText = ""
-                                    isSearching = false
-                                    isSearchFieldFocused = false
-                                }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
-                    } else {
-                        // Search button
-                        Button(action: {
-                            isSearching = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                isSearchFieldFocused = true
-                            }
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.caption)
-                                Text("Search")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                            }
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.orange.opacity(0.1))
-                            .cornerRadius(8)
+                    
+                    // Modern Search and Sort toolbar
+                    modernToolbar
+                    
+                    // Listings content
+                    modernListingsContent
+                }
+            }
+            .overlay(
+                // Floating sort dropdown overlay
+                sortDropdownOverlay,
+                alignment: .topTrailing
+            )
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    TitleView(title: "Listings")
+                }
+            }
+
+        }
+    }
+    
+    // MARK: - Sort Dropdown Overlay
+    @ViewBuilder
+    private var sortDropdownOverlay: some View {
+        if showingSortSheet {
+            ZStack(alignment: .topTrailing) {
+                // Invisible background to catch taps outside
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingSortSheet = false
                         }
                     }
-                    
-                    Spacer()
-                    
-                    // Sort button (right)
-                    Menu {
-                        ForEach(SortOption.allCases, id: \.self) { option in
-                            Button(action: {
-                                // Close search bar if it's open
-                                if isSearching {
-                                    isSearching = false
-                                    isSearchFieldFocused = false
-                                }
-                                sortOption = option
-                            }) {
-                                HStack {
-                                    Text(option.rawValue)
-                                    Spacer()
-                                    if sortOption == option {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
+                    .ignoresSafeArea()
+                
+                // Dropdown positioned correctly
+                CustomSortDropdown(
+                    currentSelection: $sortOption,
+                    isPresented: $showingSortSheet
+                )
+                .offset(x: -16, y: 70) // Position right below the sort button
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.8, anchor: .topTrailing).combined(with: .opacity),
+                    removal: .scale(scale: 0.8, anchor: .topTrailing).combined(with: .opacity)
+                ))
+            }
+            .zIndex(1000)
+        }
+    }
+    
+    // MARK: - Modern Toolbar
+    private var modernToolbar: some View {
+        HStack(spacing: 12) {
+            // Search button or search bar
+            if isSearching {
+                // Modern search bar
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .font(.body)
+                    TextField("Search listings...", text: $searchText, onEditingChanged: { editing in
+                        if !editing {
+                            isSearching = false
                         }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text("Sort")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            Image(systemName: "chevron.down")
-                                .font(.caption)
+                    })
+                    .font(.body)
+                    .focused($isSearchFieldFocused)
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                            isSearching = false
+                            isSearchFieldFocused = false
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .font(.body)
                         }
-                        .foregroundColor(.orange)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.orange.opacity(0.1))
-                        .cornerRadius(8)
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                
-                VStack(spacing: 20) {
-                ScrollView {
-                    if viewModel.listings.isEmpty {
-                        VStack(spacing: 16) {
-                            Text("No listings at the moment.")
-                                .font(.title3)
-                                .foregroundColor(.black)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 300)
-                    } else {
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(sortedListings) { item in
-                                NavigationLink {
-                                    ListingDetailView(listing: item)
-                                } label: {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        if let imageUrl = item.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                                            AsyncImage(url: url) { phase in
-                                                switch phase {
-                                                case .success(let image):
-                                                    image
-                                                        .resizable()
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .frame(maxWidth: .infinity)
-                                                        .clipped()
-                                                        .cornerRadius(8)
-                                                case .failure(_):
-                                                    Rectangle()
-                                                        .fill(Color.red.opacity(0.3))
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .frame(maxWidth: .infinity)
-                                                        .clipped()
-                                                        .cornerRadius(8)
-                                                        .overlay(
-                                                            Image(systemName: "exclamationmark.triangle")
-                                                                .foregroundColor(.red)
-                                                        )
-                                                case .empty:
-                                                    Rectangle()
-                                                        .fill(Color.gray.opacity(0.3))
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .frame(maxWidth: .infinity)
-                                                        .clipped()
-                                                        .cornerRadius(8)
-                                                        .overlay(
-                                                            ProgressView()
-                                                        )
-                                                @unknown default:
-                                                    Rectangle()
-                                                        .fill(Color.gray.opacity(0.3))
-                                                        .aspectRatio(1, contentMode: .fill)
-                                                        .frame(maxWidth: .infinity)
-                                                        .clipped()
-                                                        .cornerRadius(8)
-                                                }
-                                            }
-                                                                } else {
-                                            Rectangle()
-                                                .fill(Color.gray.opacity(0.3))
-                                                .aspectRatio(1, contentMode: .fill)
-                                                .frame(maxWidth: .infinity)
-                                                .clipped()
-                                                .cornerRadius(8)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .foregroundColor(.gray)
-                                                        .font(.title)
-                                                )
-                                        }
-
-                                        Text(item.title)
-                                            .font(.subheadline)
-                                            .lineLimit(1)
-
-                                        // Seller info
-                                        HStack(spacing: 6) {
-                                            // Seller profile picture
-                                            Group {
-                                                if let user = item.user,
-                                                   let imageUrl = user.imageUrl,
-                                                   let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                                                    AsyncImage(url: url) { image in
-                                                        image
-                                                            .resizable()
-                                                            .scaledToFill()
-                                                    } placeholder: {
-                                                        Circle()
-                                                            .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
-                                                            .overlay(
-                                                                Image(systemName: "person.fill")
-                                                                    .font(.system(size: 8))
-                                                                    .foregroundColor(.blue)
-                                                            )
-                                                    }
-                                                } else {
-                                                    Circle()
-                                                        .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
-                                                        .overlay(
-                                                            Image(systemName: "person.fill")
-                                                                .font(.system(size: 8))
-                                                                .foregroundColor(.blue)
-                                                        )
-                                                }
-                                            }
-                                            .frame(width: 16, height: 16)
-                                            .clipShape(Circle())
-                                            
-                                            // Seller name
-                                            Text(item.user?.name ?? "User \(item.userId ?? 0)")
-                                                .font(.caption2)
-                                                .foregroundColor(.secondary)
-                                                .lineLimit(1)
-                                            
-                                            Spacer()
-                                        }
-
-                                        Text("$\(item.priceString)")
-                                            .font(.headline)
-
-                                        if let location = item.location {
-                                            Text(location)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.white)
+                        .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
+                )
+            } else {
+                // Modern search button
+                Button(action: {
+                    isSearching = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isSearchFieldFocused = true
                     }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Search")
+                            .font(.body)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+                    )
                 }
-                }
+            }
             
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        TitleView(title: "Listings")
+            Spacer()
+            
+            // Modern sort button
+            Button(action: {
+                if isSearching {
+                    isSearching = false
+                    isSearchFieldFocused = false
+                }
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showingSortSheet.toggle()
+                }
+            }) {
+                HStack(spacing: 8) {
+                    Text("Sort")
+                        .font(.body)
+                        .fontWeight(.medium)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .medium))
+                        .rotationEffect(.degrees(showingSortSheet ? 180 : 0))
+                        .animation(.easeInOut(duration: 0.2), value: showingSortSheet)
+                }
+                .foregroundColor(.orange)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+                )
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+    
+    // MARK: - Modern Listings Content
+    private var modernListingsContent: some View {
+        ScrollView {
+            if viewModel.listings.isEmpty {
+                modernEmptyState
+            } else {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(sortedListings) { item in
+                        NavigationLink {
+                            ListingDetailView(listing: item)
+                        } label: {
+                            modernListingCard(item: item)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
+            }
+        }
+    }
+    
+    // MARK: - Modern Empty State
+    private var modernEmptyState: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            // Fun shopping illustration
+            ZStack {
+                Circle()
+                    .fill(LinearGradient(colors: [.orange.opacity(0.2), .yellow.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 100, height: 100)
+                    .offset(x: -15, y: -10)
+                
+                Circle()
+                    .fill(LinearGradient(colors: [.blue.opacity(0.2), .purple.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 80, height: 80)
+                    .offset(x: 20, y: 15)
+                
+                Image(systemName: "bag.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.orange, .red, .pink],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+            .scaleEffect(animateGradient ? 1.05 : 1.0)
+            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: animateGradient)
+            
+            VStack(spacing: 12) {
+                Text("No listings yet")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                Text("Be the first to add a listing!")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 60)
+    }
+    
+    // MARK: - Modern Listing Card
+    private func modernListingCard(item: Listing) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Modern image with enhanced styling
+            Group {
+                if let imageUrl = item.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        case .failure(_):
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.red.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fit)
+                                .frame(maxWidth: .infinity)
+                                .overlay(
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.red)
+                                        Text("Failed to load")
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                    }
+                                )
+                        case .empty:
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fit)
+                                .frame(maxWidth: .infinity)
+                                .overlay(
+                                    ProgressView()
+                                        .scaleEffect(1.2)
+                                )
+                        @unknown default:
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fit)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                } else {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.gray.opacity(0.1), Color.gray.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .aspectRatio(1, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .overlay(
+                            VStack(spacing: 8) {
+                                Image(systemName: "photo.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.gray.opacity(0.6))
+                                Text("No image")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        )
+                }
             }
 
+            VStack(alignment: .leading, spacing: 8) {
+                // Title
+                Text(item.title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .lineLimit(2)
+                    .foregroundColor(.primary)
+
+                // Seller info
+                HStack(spacing: 8) {
+                    Group {
+                        if let user = item.user,
+                           let imageUrl = user.imageUrl,
+                           let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                            AsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                            } placeholder: {
+                                Circle()
+                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                    )
+                            }
+                        } else {
+                            Circle()
+                                .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                )
+                        }
+                    }
+                    .frame(width: 20, height: 20)
+                    .clipShape(Circle())
+                    
+                    Text(item.user?.name ?? "User \(item.userId ?? 0)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                    
+                    Spacer()
+                }
+
+                // Price
+                Text("$\(item.priceString)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+
+                // Location
+                if let location = item.location {
+                    HStack(spacing: 4) {
+                        Image(systemName: "location.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(location)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+        )
+    }
+}
+
+// MARK: - Custom Sort Dropdown
+struct CustomSortDropdown: View {
+    @Binding var currentSelection: ListingsView.SortOption
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            ForEach(ListingsView.SortOption.allCases, id: \.self) { option in
+                modernSortOptionRow(option: option)
+            }
+        }
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 8)
+                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        )
+        .frame(width: 240)
+        .onTapGesture {
+            // Prevent dismissing when tapping inside the dropdown
+        }
+    }
+    
+    private func modernSortOptionRow(option: ListingsView.SortOption) -> some View {
+        Button(action: {
+            currentSelection = option
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isPresented = false
+            }
+        }) {
+            HStack(spacing: 12) {
+                // Text
+                Text(option.rawValue)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(
+                        currentSelection == option ? .orange : .primary
+                    )
+                
+                Spacer()
+                
+                // Selection indicator
+                if currentSelection == option {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.orange)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        currentSelection == option
+                            ? Color.orange.opacity(0.08)
+                            : Color.clear
+                    )
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func sortIconForOption(_ option: ListingsView.SortOption) -> String {
+        switch option {
+        case .newest:
+            return "clock.arrow.circlepath"
+        case .oldest:
+            return "clock"
+        case .priceHighToLow:
+            return "arrow.down.circle"
+        case .priceLowToHigh:
+            return "arrow.up.circle"
+        case .alphabetical:
+            return "textformat.abc"
+        }
+    }
+}
+
+// MARK: - ListingsView Extension
+extension ListingsView {
+    
+    // MARK: - Helper Functions
+    private func sortIconForOption(_ option: SortOption) -> String {
+        switch option {
+        case .newest:
+            return "clock.arrow.circlepath"
+        case .oldest:
+            return "clock"
+        case .priceHighToLow:
+            return "arrow.down.circle"
+        case .priceLowToHigh:
+            return "arrow.up.circle"
+        case .alphabetical:
+            return "textformat.abc"
         }
     }
 }

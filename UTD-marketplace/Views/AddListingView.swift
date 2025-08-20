@@ -14,6 +14,8 @@ struct AddListingView: View {
     @State private var imageDataArray: [Data] = []
     @State private var showPriceError = false
     @State private var showingAuthentication = false
+    @State private var animateGradient = false
+    @State private var showingLocationDropdown = false
 
     // Dropdown options
     private let locations = [
@@ -34,43 +36,83 @@ struct AddListingView: View {
                 authenticatedView
             } else {
                 // Unauthenticated view inline
-                VStack(spacing: 30) {
-                    Spacer()
-                    
-                    VStack(spacing: 20) {
-                        Image(systemName: "plus.circle")
-                            .font(.system(size: 60))
-                            .foregroundColor(.orange)
-                        
-                        VStack(spacing: 8) {
-                            Text("Login Required")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Text("You need to be logged in to create a listing")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
+                ZStack {
+                    // Modern gradient background
+                    LinearGradient(
+                        colors: [
+                            Color.blue.opacity(0.03),
+                            Color.purple.opacity(0.03),
+                            Color.pink.opacity(0.03)
+                        ],
+                        startPoint: animateGradient ? .topLeading : .bottomTrailing,
+                        endPoint: animateGradient ? .bottomTrailing : .topLeading
+                    )
+                    .ignoresSafeArea()
+                    .onAppear {
+                        withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
+                            animateGradient.toggle()
                         }
                     }
                     
-                    Button(action: {
-                        showingAuthentication = true
-                    }) {
-                        Text("Login to Create Listing")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.orange)
-                            .cornerRadius(12)
+                    VStack(spacing: 30) {
+                        Spacer()
+                        
+                        VStack(spacing: 20) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.orange, .orange.opacity(0.8)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 80, height: 80)
+                                
+                                Image(systemName: "plus.circle")
+                                    .font(.system(size: 40, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(spacing: 8) {
+                                Text("Login Required")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("You need to be logged in to create a listing")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                        
+                        Button(action: {
+                            showingAuthentication = true
+                        }) {
+                            Text("Login to Create Listing")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [.orange, .orange.opacity(0.8)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
+                                )
+                        }
+                        .padding(.horizontal, 40)
+                        
+                        Spacer()
                     }
-                    .padding(.horizontal, 40)
-                    
-                    Spacer()
                 }
-                .background(Color(.systemGroupedBackground))
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button("Cancel") { dismiss() }
@@ -92,84 +134,41 @@ struct AddListingView: View {
     }
     
     private var authenticatedView: some View {
-        Form {
-                Section("Photos") {
-                    PhotosPicker(
-                        selection: $photoItems,
-                        maxSelectionCount: 5,
-                        matching: .images,
-                        photoLibrary: .shared()
-                    ) {
-                        Label("Choose photos (up to 5)", systemImage: "photo.on.rectangle.angled")
-                    }
-                    
-                    if !imageDataArray.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(Array(imageDataArray.enumerated()), id: \.offset) { index, data in
-                                    if let ui = UIImage(data: data) {
-                                        ZStack(alignment: .topTrailing) {
-                                            Image(uiImage: ui)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 120, height: 120)
-                                                .clipped()
-                                                .cornerRadius(8)
-                                            
-                                            Button(action: {
-                                                imageDataArray.remove(at: index)
-                                                photoItems.remove(at: index)
-                                            }) {
-                                                Image(systemName: "xmark.circle.fill")
-                                                    .foregroundColor(.white)
-                                                    .background(Color.black.opacity(0.6))
-                                                    .clipShape(Circle())
-                                            }
-                                            .padding(4)
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 4)
-                        }
-                        
-                        Text("\(imageDataArray.count) of 5 photos selected")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Section("Details") {
-                    TextField("Title", text: $title)
-
-                    // Location dropdown
-                    Picker("Location", selection: $location) {
-                        ForEach(locations, id: \.self) { loc in
-                            Text(loc).tag(loc)
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    // Price with digits-only filtering
-                    TextField("Price", text: Binding(
-                        get: { price },
-                        set: { newValue in
-                            let filtered = newValue.filter { $0.isNumber }
-                            showPriceError = (filtered != newValue)
-                            price = filtered
-                        }
-                    ))
-                    .keyboardType(.numberPad)
-
-                    if showPriceError {
-                        Text("Numbers only")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
-
-                    TextField("Description", text: $description, axis: .vertical)
+        ZStack {
+            // Modern gradient background
+            LinearGradient(
+                colors: [
+                    Color.blue.opacity(0.03),
+                    Color.purple.opacity(0.03),
+                    Color.pink.opacity(0.03)
+                ],
+                startPoint: animateGradient ? .topLeading : .bottomTrailing,
+                endPoint: animateGradient ? .bottomTrailing : .topLeading
+            )
+            .ignoresSafeArea()
+            .onAppear {
+                withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
+                    animateGradient.toggle()
                 }
             }
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Photos Section Card
+                    modernPhotosSection()
+                    
+                    // Details Section Card
+                    modernDetailsSection()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
+            }
+        }
+        .overlay(
+            // Custom location dropdown overlay
+            locationDropdownOverlay(),
+            alignment: .center
+        )
            // .navigationTitle("New Listing")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -204,5 +203,397 @@ struct AddListingView: View {
                 }
             }
         }
+    
+    // MARK: - Modern Photos Section
+    private func modernPhotosSection() -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Photos")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            // Photo picker button
+            PhotosPicker(
+                selection: $photoItems,
+                maxSelectionCount: 5,
+                matching: .images,
+                photoLibrary: .shared()
+            ) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.gray.opacity(0.2), Color.gray.opacity(0.1)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 50, height: 50)
+                        
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Choose Photos")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                        
+                        Text("Select up to 5 photos")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                )
+            }
+            
+            // Photo preview
+            if !imageDataArray.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("\(imageDataArray.count) of 5 photos selected")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(Array(imageDataArray.enumerated()), id: \.offset) { index, data in
+                                if let ui = UIImage(data: data) {
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(uiImage: ui)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 100, height: 100)
+                                            .clipped()
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        
+                                        Button(action: {
+                                            imageDataArray.remove(at: index)
+                                            photoItems.remove(at: index)
+                                        }) {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 20))
+                                                .foregroundColor(.white)
+                                                .background(
+                                                    Circle()
+                                                        .fill(Color.black.opacity(0.7))
+                                                        .frame(width: 24, height: 24)
+                                                )
+                                        }
+                                        .offset(x: 8, y: -8)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 4)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+        )
     }
+    
+    // MARK: - Modern Details Section
+    private func modernDetailsSection() -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Details")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            VStack(spacing: 16) {
+                // Title field
+                modernTextField(
+                    title: "Title",
+                    text: $title,
+                    placeholder: "Enter listing title"
+                )
+                
+                // Price field
+                VStack(alignment: .leading, spacing: 8) {
+                    modernTextField(
+                        title: "Price",
+                        text: Binding(
+                            get: { price },
+                            set: { newValue in
+                                let filtered = newValue.filter { $0.isNumber }
+                                showPriceError = (filtered != newValue)
+                                price = filtered
+                            }
+                        ),
+                        placeholder: "Enter price",
+                        keyboardType: .numberPad
+                    )
+                    
+                    if showPriceError {
+                        Text("Numbers only")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.leading, 4)
+                    }
+                }
+                
+                // Custom location dropdown button
+                modernLocationDropdown()
+                
+                // Description field
+                modernTextEditor(
+                    title: "Description",
+                    text: $description,
+                    placeholder: "Describe your item..."
+                )
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+        )
+    }
+    
+    // MARK: - Modern Location Dropdown
+    private func modernLocationDropdown() -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Location")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+            
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showingLocationDropdown = true
+                }
+            }) {
+                HStack(spacing: 12) {
+                    Text(location)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .rotationEffect(.degrees(showingLocationDropdown ? 180 : 0))
+                        .animation(.easeInOut(duration: 0.2), value: showingLocationDropdown)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                )
+            }
+        }
+    }
+    
+    // MARK: - Custom Location Dropdown Overlay
+    @ViewBuilder
+    private func locationDropdownOverlay() -> some View {
+        if showingLocationDropdown {
+            ZStack {
+                // Invisible background to catch taps outside
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingLocationDropdown = false
+                        }
+                    }
+                    .ignoresSafeArea()
+                
+                // Dropdown content
+                CustomLocationDropdown(
+                    locations: locations,
+                    currentSelection: $location,
+                    isPresented: $showingLocationDropdown
+                )
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.9).combined(with: .opacity),
+                    removal: .scale(scale: 0.9).combined(with: .opacity)
+                ))
+            }
+            .zIndex(1000)
+        }
+    }
+    
+    // MARK: - Helper Functions
+    private func modernTextField(
+        title: String,
+        text: Binding<String>,
+        placeholder: String,
+        keyboardType: UIKeyboardType = .default
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+            
+            TextField(placeholder, text: text)
+                .font(.body)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                )
+                .keyboardType(keyboardType)
+        }
+    }
+    
+    private func modernTextEditor(
+        title: String,
+        text: Binding<String>,
+        placeholder: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+            
+            ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+                    .frame(height: 100)
+                
+                if text.wrappedValue.isEmpty {
+                    Text(placeholder)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                }
+                
+                TextEditor(text: text)
+                    .font(.body)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.clear)
+                    .frame(height: 100)
+            }
+        }
+    }
+}
 
+// MARK: - Custom Location Dropdown
+struct CustomLocationDropdown: View {
+    let locations: [String]
+    @Binding var currentSelection: String
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            // Header
+            VStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.secondary.opacity(0.3))
+                    .frame(width: 40, height: 6)
+                
+                Text("Select Location")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+            }
+            .padding(.top, 16)
+            
+            // Location options
+            ScrollView {
+                VStack(spacing: 4) {
+                    ForEach(locations, id: \.self) { location in
+                        locationOptionRow(location: location)
+                    }
+                }
+            }
+            .frame(maxHeight: 300)
+        }
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 8)
+                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        )
+        .frame(width: 280)
+        .onTapGesture {
+            // Prevent dismissing when tapping inside the dropdown
+        }
+    }
+    
+    private func locationOptionRow(location: String) -> some View {
+        Button(action: {
+            currentSelection = location
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isPresented = false
+            }
+        }) {
+            HStack(spacing: 12) {
+                Text(location)
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(
+                        currentSelection == location ? .orange : .primary
+                    )
+                
+                Spacer()
+                
+                if currentSelection == location {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.orange)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        currentSelection == location
+                            ? Color.orange.opacity(0.08)
+                            : Color.clear
+                    )
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
