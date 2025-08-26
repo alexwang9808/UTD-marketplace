@@ -169,7 +169,7 @@ struct ListingDetailView: View {
                                     .font(.caption)
                                 Text(location)
                                     .font(.body)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.black)
                             }
                         }
                         
@@ -182,7 +182,7 @@ struct ListingDetailView: View {
                                     .foregroundColor(.primary)
                                 Text(description)
                                     .font(.body)
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(.secondary)
                                     .lineSpacing(2)
                             }
                         }

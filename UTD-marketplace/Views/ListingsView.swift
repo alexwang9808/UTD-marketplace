@@ -440,7 +440,7 @@ struct ListingsView: View {
                             .foregroundColor(.secondary)
                         Text(location)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.black)
                             .lineLimit(1)
                     }
                 }
