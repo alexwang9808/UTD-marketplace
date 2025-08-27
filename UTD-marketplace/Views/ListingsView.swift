@@ -86,9 +86,6 @@ struct ListingsView: View {
                     .frame(height: 4)
                     .edgesIgnoringSafeArea(.horizontal)
                     
-                    // Modern Search and Sort toolbar
-                    modernToolbar
-                    
                     // Listings content
                     modernListingsContent
                 }
@@ -250,25 +247,30 @@ struct ListingsView: View {
     // MARK: - Modern Listings Content
     private var modernListingsContent: some View {
         ScrollView {
-            if viewModel.listings.isEmpty {
-                modernEmptyState
-            } else {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(sortedListings) { item in
-                        NavigationLink {
-                            ListingDetailView(listing: item)
-                                .onAppear {
-                                    // Track click when detail view appears
-                                    trackListingClick(for: item)
-                                }
-                        } label: {
-                            modernListingCard(item: item)
+            VStack(spacing: 0) {
+                // Modern Search and Sort toolbar
+                modernToolbar
+                
+                if viewModel.listings.isEmpty {
+                    modernEmptyState
+                } else {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        ForEach(sortedListings) { item in
+                            NavigationLink {
+                                ListingDetailView(listing: item)
+                                    .onAppear {
+                                        // Track click when detail view appears
+                                        trackListingClick(for: item)
+                                    }
+                            } label: {
+                                modernListingCard(item: item)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 20)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 20)
             }
         }
     }

@@ -167,45 +167,6 @@ struct ListingDetailView: View {
                             .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                         
-                        // Time ago, Click count, and Location
-                        VStack(spacing: 8) {
-                            HStack(spacing: 16) {
-                                // Time ago
-                                HStack(spacing: 6) {
-                                    Image(systemName: "clock.fill")
-                                        .foregroundColor(.secondary)
-                                        .font(.caption)
-                                    Text(currentListing.timeAgo)
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                // Click count
-                                HStack(spacing: 6) {
-                                    Image(systemName: "eye.fill")
-                                        .foregroundColor(.secondary)
-                                        .font(.caption)
-                                    Text("\(currentListing.clickCount ?? 0) \((currentListing.clickCount ?? 0) == 1 ? "click" : "clicks")")
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            
-                            if let location = currentListing.location {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "location.fill")
-                                        .foregroundColor(.secondary)
-                                        .font(.caption)
-                                    Text(location)
-                                        .font(.body)
-                                        .foregroundColor(.black)
-                                    Spacer()
-                                }
-                            }
-                        }
-                        
                         // Description
                         if let description = currentListing.description {
                             VStack(alignment: .leading, spacing: 8) {
@@ -217,6 +178,46 @@ struct ListingDetailView: View {
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                     .lineSpacing(2)
+                            }
+                        }
+                        
+                        // Time ago and Location
+                        VStack(spacing: 8) {
+                            // Time ago
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock.fill")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                Text(currentListing.timeAgo)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                            }
+                            
+                            // Location and Click count on same row
+                            HStack {
+                                if let location = currentListing.location {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "location.fill")
+                                            .foregroundColor(.secondary)
+                                            .font(.caption)
+                                        Text(location)
+                                            .font(.body)
+                                            .foregroundColor(.black)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                // Click count on bottom right
+                                HStack(spacing: 6) {
+                                    Image(systemName: "eye.fill")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                    Text("\(currentListing.clickCount ?? 0) \((currentListing.clickCount ?? 0) == 1 ? "click" : "clicks")")
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
                     }
@@ -400,6 +401,12 @@ struct ListingDetailView: View {
             return
         }
         
+        // Check if user is authenticated
+        guard authManager.isAuthenticated, authManager.authToken != nil else {
+            showingAuthentication = true
+            return
+        }
+        
         isSendingMessage = true
         
         viewModel.sendMessage(
@@ -408,14 +415,14 @@ struct ListingDetailView: View {
             authToken: authManager.authToken
         ) { success in
             DispatchQueue.main.async {
-                isSendingMessage = false
+                self.isSendingMessage = false
                 
                 if success {
-                    messageText = ""
-                    showSuccessMessage = true
+                    self.messageText = ""
+                    self.showSuccessMessage = true
                     
                     // Refresh conversations so they appear in Messages tab
-                    viewModel.fetchConversations()
+                    self.viewModel.fetchConversations()
                 } else {
                     // Could add error handling here
                     print("Failed to send message")

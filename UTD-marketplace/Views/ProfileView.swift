@@ -1,18 +1,18 @@
 import SwiftUI
-import PhotosUI
 
 struct ProfileView: View {
     @EnvironmentObject private var viewModel: ListingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
-    @State private var selectedItem: PhotosPickerItem?
     @State private var profileImage: UIImage?
     @State private var currentUser: User?
     @State private var isUpdatingProfile = false
-    @State private var showingPhotoPicker = false
+    @State private var showingEditProfile = false
+
     @State private var showingAddListing = false
     @State private var showingMyListings = false
     @State private var showingLogoutAlert = false
     @State private var animateGradient = false
+    @State private var showingSettingsDropdown = false
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
@@ -60,32 +60,43 @@ struct ProfileView: View {
                     }
                 }
             }
+            .overlay(
+                // Floating settings button overlay
+                settingsButtonOverlay,
+                alignment: .topTrailing
+            )
+            .overlay(
+                // Settings dropdown overlay
+                settingsDropdownOverlay,
+                alignment: .topTrailing
+            )
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     TitleView(title: "Profile")
                 }
             }
             .onAppear {
-                fetchCurrentUser()
+                fetchUserFromBackend()
             }
             .onChange(of: authManager.currentUser) {
                 fetchCurrentUser()
             }
-            .onChange(of: selectedItem) {
-                Task {
-                    if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data) {
-                        profileImage = uiImage
-                        await updateProfileImage(imageData: data)
-                    }
-                }
-            }
-            .photosPicker(isPresented: $showingPhotoPicker, selection: $selectedItem, matching: .images)
             .sheet(isPresented: $showingAddListing) {
                 AddListingView()
             }
             .sheet(isPresented: $showingMyListings) {
                 MyListingsView()
+            }
+            .sheet(isPresented: $showingEditProfile) {
+                if let user = currentUser {
+                    EditProfileView(user: user)
+                }
+            }
+            .onChange(of: showingEditProfile) { 
+                // Refresh user data when edit profile sheet is dismissed
+                if !showingEditProfile {
+                    fetchUserFromBackend()
+                }
             }
             .alert("Logout", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -105,11 +116,24 @@ struct ProfileView: View {
             modernProfilePicture
             
             // User info
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 Text(currentUser?.name ?? "Unknown User")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
+                
+                // Bio section
+                VStack(spacing: 8) {
+                    if let bio = currentUser?.bio, !bio.isEmpty {
+                        Text(bio)
+                            .font(.body)
+                            .foregroundColor(.gray)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(3)
+                            
+                    } 
+                }
                 
                 if isUpdatingProfile {
                     HStack(spacing: 8) {
@@ -126,72 +150,53 @@ struct ProfileView: View {
     }
     
     private var modernProfilePicture: some View {
-        Button(action: {
-            showingPhotoPicker = true
-        }) {
-            ZStack {
-                // Profile image
-                Group {
-                    if let profileImage = profileImage {
-                        Image(uiImage: profileImage)
-                            .resizable()
-                            .scaledToFill()
-                    } else if let user = currentUser, 
-                              let imageUrl = user.imageUrl,
-                              let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                        } placeholder: {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .overlay(
-                                    ProgressView()
-                                        .scaleEffect(1.2)
-                                )
-                        }
-                    } else {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+        // Profile image (display only)
+        Group {
+            if let profileImage = profileImage {
+                Image(uiImage: profileImage)
+                    .resizable()
+                    .scaledToFill()
+            } else if let user = currentUser, 
+                      let imageUrl = user.imageUrl,
+                      let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 50))
-                                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
-                            )
-                    }
+                        )
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(1.2)
+                        )
                 }
-                .frame(width: 120, height: 120)
-                .clipShape(Circle())
-                .shadow(color: Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3), radius: 12, x: 0, y: 6)
-                
-                // Modern camera overlay
+            } else {
                 Circle()
-                    .fill(Color.black.opacity(0.7))
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Image(systemName: "camera.fill")
-                            .foregroundColor(.white)
-                            .font(.system(size: 16, weight: .semibold))
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                    .offset(x: 35, y: 35)
-                    .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                    )
             }
-            .scaleEffect(isUpdatingProfile ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: isUpdatingProfile)
         }
+        .frame(width: 100, height: 100)
+        .clipShape(Circle())
+        .scaleEffect(isUpdatingProfile ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isUpdatingProfile)
     }
     
     // MARK: - Modern Action Buttons
@@ -205,20 +210,6 @@ struct ProfileView: View {
                 color: .orange,
                 action: { showingAddListing = true }
             )
-            
-            // My Listings Button
-            modernMyListingsButton
-            
-            // Logout Button
-            if authManager.isAuthenticated {
-                modernActionButton(
-                    icon: "power",
-                    title: "Logout",
-                    subtitle: "Sign out of your account",
-                    color: .red,
-                    action: { showingLogoutAlert = true }
-                )
-            }
         }
         .padding(.horizontal, 16)
     }
@@ -353,12 +344,51 @@ struct ProfileView: View {
                 id: authUser.id,
                 email: authUser.email,
                 name: authUser.name,
-                imageUrl: authUser.imageUrl
+                imageUrl: authUser.imageUrl,
+                bio: nil // AuthUser doesn't have bio, so set to nil
             )
         } else {
             self.currentUser = nil
         }
         self.profileImage = nil // Reset local image
+    }
+    
+    private func fetchUserFromBackend() {
+        guard let userId = authManager.currentUser?.id,
+              let authToken = authManager.authToken else {
+            fetchCurrentUser() // Fallback to current method
+            return
+        }
+        
+        let url = URL(string: "http://localhost:3001/users/\(userId)")!
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Error fetching user: \(error.localizedDescription)")
+                    self.fetchCurrentUser() // Fallback
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200,
+                   let data = data {
+                    
+                    do {
+                        let user = try JSONDecoder().decode(User.self, from: data)
+                        self.currentUser = user
+                    } catch {
+                        print("Error decoding user: \(error)")
+                        self.fetchCurrentUser() // Fallback
+                    }
+                } else {
+                    print("Failed to fetch user from backend")
+                    self.fetchCurrentUser() // Fallback
+                }
+            }
+        }.resume()
     }
     
     private func updateProfileImage(imageData: Data) async {
@@ -422,7 +452,8 @@ struct ProfileView: View {
                                 id: user.id,
                                 email: user.email,
                                 name: user.name,
-                                imageUrl: imageUrl
+                                imageUrl: imageUrl,
+                                bio: user.bio // Preserve existing bio
                             )
                         }
                         
@@ -455,6 +486,154 @@ struct ProfileView: View {
             DispatchQueue.main.async {
                 self.isUpdatingProfile = false
                 print("Error updating profile image: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Settings Button Overlay
+    @ViewBuilder
+    private var settingsButtonOverlay: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showingSettingsDropdown.toggle()
+            }
+        }) {
+            Image(systemName: "gearshape.fill")
+                .font(.system(size: 25, weight: .medium))
+                .foregroundColor(.gray)
+                .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
+                .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
+        }
+        .padding(.trailing, 16)
+        .padding(.top, 8)
+    }
+    
+    // MARK: - Settings Dropdown Overlay
+    @ViewBuilder
+    private var settingsDropdownOverlay: some View {
+        if showingSettingsDropdown {
+            ZStack(alignment: .topTrailing) {
+                // Invisible background to catch taps outside
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingSettingsDropdown = false
+                        }
+                    }
+                    .ignoresSafeArea()
+                
+                // Dropdown menu
+                VStack(spacing: 0) {
+                    // Edit profile
+                    Button(action: {
+                        showingEditProfile = true
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingSettingsDropdown = false
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.circle")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.green)
+                                .frame(width: 20)
+                            Text("Edit profile")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 16)
+
+                    Button(action: {
+                        showingMyListings = true
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingSettingsDropdown = false
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "list.bullet.rectangle")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.orange)
+                                .frame(width: 20)
+                            Text("My Listings")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 16)
+                    
+                    // Contact
+                    Button(action: {
+                        // Contact action - placeholder
+                        print("Contact tapped")
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingSettingsDropdown = false
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "envelope")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.blue)
+                                .frame(width: 20)
+                            Text("Contact")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 16)
+                    
+                    // Logout
+                    Button(action: {
+                        showingLogoutAlert = true
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingSettingsDropdown = false
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.right.square")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.red)
+                                .frame(width: 20)
+                            Text("Log out")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.white)
+                        .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                )
+                .frame(width: 180)
+                .padding(.trailing, 16)
+                .padding(.top, 45) // Position below the settings button
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.8).combined(with: .opacity),
+                    removal: .scale(scale: 0.9).combined(with: .opacity)
+                ))
             }
         }
     }

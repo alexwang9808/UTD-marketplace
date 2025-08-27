@@ -732,7 +732,7 @@ app.delete('/listings/:id', authenticateToken, async (req, res) => {
 // Update a user (including profile image)
 app.put('/users/:id', upload.single('image'), async (req, res) => {
   const { id } = req.params;
-  const { email, name } = req.body;
+  const { email, name, bio } = req.body;
   
   if (!id || isNaN(parseInt(id))) {
     return res.status(400).json({ error: 'Invalid user ID' });
@@ -751,6 +751,11 @@ app.put('/users/:id', upload.single('image'), async (req, res) => {
       name,
     };
     
+    // Add bio if provided
+    if (bio !== undefined) {
+      updateData.bio = bio;
+    }
+    
     // Only update imageUrl if a new image was provided
     if (imageUrl) {
       updateData.imageUrl = imageUrl;
@@ -766,6 +771,37 @@ app.put('/users/:id', upload.single('image'), async (req, res) => {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'User not found' });
     }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get a user by ID
+app.get('/users/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'Invalid user ID' });
+  }
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        imageUrl: true,
+        bio: true,
+        createdAt: true
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

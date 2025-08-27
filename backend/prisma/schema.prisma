@@ -13,6 +13,7 @@ model User {
   password          String?        // Password hash
   name              String?
   imageUrl          String?        // Profile picture URL
+  bio               String?        // User bio
   isVerified        Boolean        @default(false)
   verificationToken String?        @unique
   resetToken        String?        // Password reset token
