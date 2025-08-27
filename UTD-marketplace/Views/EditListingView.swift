@@ -4,6 +4,7 @@ import PhotosUI
 struct EditListingView: View {
     let listing: Listing
     @EnvironmentObject private var viewModel: ListingViewModel
+    @EnvironmentObject private var authManager: AuthenticationManager
     @Environment(\.dismiss) private var dismiss
     
     @State private var title: String
@@ -170,7 +171,8 @@ struct EditListingView: View {
             price: price,
             description: description,
             location: location,
-            imageDataArray: nil
+            imageDataArray: nil,
+            authToken: authManager.authToken
         ) { success in
             DispatchQueue.main.async {
                 isUpdating = false
@@ -188,7 +190,7 @@ struct EditListingView: View {
         
         isDeleting = true
         
-        viewModel.deleteListing(id: listingId) { success in
+        viewModel.deleteListing(id: listingId, authToken: authManager.authToken) { success in
             DispatchQueue.main.async {
                 isDeleting = false
                 if success {

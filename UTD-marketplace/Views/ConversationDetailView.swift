@@ -22,7 +22,9 @@ struct ConversationDetailView: View {
     }
     
     private var displayMessages: [Message] {
-        return conversation?.messages ?? []
+        // Use live messages from ViewModel if available, fallback to conversation messages
+        let liveMessages = viewModel.messages[listingId] ?? []
+        return liveMessages.isEmpty ? (conversation?.messages ?? []) : liveMessages
     }
     
     private var listingId: Int {
@@ -59,6 +61,8 @@ struct ConversationDetailView: View {
                 withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
                     animateGradient.toggle()
                 }
+                // Fetch messages for this specific listing when view appears
+                viewModel.fetchMessages(for: listingId)
             }
             
             VStack(spacing: 0) {
@@ -66,18 +70,39 @@ struct ConversationDetailView: View {
                 modernListingHeader
                 
                 // Messages area
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        if displayMessages.isEmpty {
-                            modernEmptyState
-                        } else {
-                            ForEach(displayMessages.sorted { $0.createdAt < $1.createdAt }) { message in
-                                modernMessageBubble(message: message)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            if displayMessages.isEmpty {
+                                modernEmptyState
+                            } else {
+                                let sortedMessages = displayMessages.sorted { $0.createdAt < $1.createdAt }
+                                ForEach(Array(sortedMessages.enumerated()), id: \.element.id) { index, message in
+                                    let shouldShowTime = shouldShowTimestamp(for: message, at: index, in: sortedMessages)
+                                    modernMessageBubble(message: message, showTimestamp: shouldShowTime)
+                                        .id(message.id)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 20)
+                    }
+                    .onChange(of: displayMessages.count) { _ in
+                        // Auto-scroll to the latest message
+                        if let lastMessage = displayMessages.sorted(by: { $0.createdAt < $1.createdAt }).last {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
+                    .onAppear {
+                        // Scroll to bottom when view first appears
+                        if let lastMessage = displayMessages.sorted(by: { $0.createdAt < $1.createdAt }).last {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                            }
+                        }
+                    }
                 }
                 
                 // Modern input bar
@@ -199,7 +224,7 @@ struct ConversationDetailView: View {
     }
     
     // MARK: - Modern Message Bubble
-    private func modernMessageBubble(message: Message) -> some View {
+    private func modernMessageBubble(message: Message, showTimestamp: Bool = true) -> some View {
         HStack {
             let isSender = message.isFromCurrentUser(currentUserId: authManager.currentUser?.id ?? -1)
             if isSender { Spacer(minLength: 60) }
@@ -234,22 +259,15 @@ struct ConversationDetailView: View {
                     )
                     .foregroundColor(isSender ? .white : .primary)
                 
-                // Message metadata
-                HStack(spacing: 6) {
-                    if let user = message.user {
-                        Text(user.name ?? user.email)
+                // Message metadata (only show if showTimestamp is true)
+                if showTimestamp {
+                    HStack(spacing: 6) {
+                        Text(formatTime(message.createdAt))
                             .font(.caption)
-                            .fontWeight(.medium)
                             .foregroundColor(.secondary)
                     }
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(formatTime(message.createdAt))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    .padding(.horizontal, 4)
                 }
-                .padding(.horizontal, 4)
             }
             
             if !isSender { Spacer(minLength: 60) }
@@ -330,5 +348,30 @@ struct ConversationDetailView: View {
         displayFormatter.timeStyle = .short
         
         return displayFormatter.string(from: date)
+    }
+    
+    private func shouldShowTimestamp(for message: Message, at index: Int, in messages: [Message]) -> Bool {
+        // Always show timestamp for the last message
+        if index == messages.count - 1 {
+            return true
+        }
+        
+        // Check if the next message is from a different user
+        let nextMessage = messages[index + 1]
+        if nextMessage.userId != message.userId {
+            return true
+        }
+        
+        // Check if the next message was sent more than 2 minutes later
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        
+        guard let currentDate = formatter.date(from: message.createdAt),
+              let nextDate = formatter.date(from: nextMessage.createdAt) else {
+            return true
+        }
+        
+        let timeDifference = nextDate.timeIntervalSince(currentDate)
+        return timeDifference > 120 // 2 minutes
     }
 } 

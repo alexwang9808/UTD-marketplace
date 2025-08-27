@@ -147,9 +147,6 @@ struct ListingDetailView: View {
                                     .font(.headline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.primary)
-                                Text("Seller")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
                             }
                             
                             Spacer()
@@ -161,15 +158,42 @@ struct ListingDetailView: View {
                             .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                         
-                        // Location
-                        if let location = listing.location {
-                            HStack(spacing: 8) {
-                                Image(systemName: "location.fill")
-                                    .foregroundColor(.secondary)
-                                    .font(.caption)
-                                Text(location)
-                                    .font(.body)
-                                    .foregroundColor(.black)
+                        // Time ago, Click count, and Location
+                        VStack(spacing: 8) {
+                            HStack(spacing: 16) {
+                                // Time ago
+                                HStack(spacing: 6) {
+                                    Image(systemName: "clock.fill")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                    Text(listing.timeAgo)
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                // Click count
+                                HStack(spacing: 6) {
+                                    Image(systemName: "eye.fill")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                    Text("\(listing.clickCount ?? 0) \((listing.clickCount ?? 0) == 1 ? "click" : "clicks")")
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            if let location = listing.location {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "location.fill")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                    Text(location)
+                                        .font(.body)
+                                        .foregroundColor(.black)
+                                    Spacer()
+                                }
                             }
                         }
                         

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ListingsView: View {
     @EnvironmentObject var viewModel: ListingViewModel
+    @EnvironmentObject var authManager: AuthenticationManager
     @State private var sortOption: SortOption = .newest
     @State private var showingSortMenu = false
     @State private var searchText = ""
@@ -9,6 +10,7 @@ struct ListingsView: View {
     @FocusState private var isSearchFieldFocused: Bool
     @State private var animateGradient = false
     @State private var showingSortSheet = false
+    @State private var timeSnapshot = Date() // Snapshot for time ago calculations
 
     private let columns = [
         GridItem(.flexible()),
@@ -70,6 +72,8 @@ struct ListingsView: View {
                     withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
                         animateGradient.toggle()
                     }
+                    // Refresh time snapshot when view appears
+                    timeSnapshot = Date()
                 }
                 
                 VStack(spacing: 0) {
@@ -121,7 +125,8 @@ struct ListingsView: View {
                 // Dropdown positioned correctly
                 CustomSortDropdown(
                     currentSelection: $sortOption,
-                    isPresented: $showingSortSheet
+                    isPresented: $showingSortSheet,
+                    onSelectionChanged: { timeSnapshot = Date() }
                 )
                 .offset(x: -16, y: 70) // Position right below the sort button
                 .transition(.asymmetric(
@@ -146,6 +151,7 @@ struct ListingsView: View {
                     TextField("Search listings...", text: $searchText, onEditingChanged: { editing in
                         if !editing {
                             isSearching = false
+                            timeSnapshot = Date() // Refresh time when search editing ends
                         }
                     })
                     .font(.body)
@@ -155,6 +161,7 @@ struct ListingsView: View {
                             searchText = ""
                             isSearching = false
                             isSearchFieldFocused = false
+                            timeSnapshot = Date() // Refresh time when clearing search
                         }) {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.secondary)
@@ -173,6 +180,7 @@ struct ListingsView: View {
                 // Modern search button
                 Button(action: {
                     isSearching = true
+                    timeSnapshot = Date() // Refresh time when starting search
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         isSearchFieldFocused = true
                     }
@@ -206,6 +214,7 @@ struct ListingsView: View {
                 if isSearching {
                     isSearching = false
                     isSearchFieldFocused = false
+                    timeSnapshot = Date() // Refresh time when closing search via sort button
                 }
                 withAnimation(.easeInOut(duration: 0.2)) {
                     showingSortSheet.toggle()
@@ -248,6 +257,10 @@ struct ListingsView: View {
                     ForEach(sortedListings) { item in
                         NavigationLink {
                             ListingDetailView(listing: item)
+                                .onAppear {
+                                    // Track click when detail view appears
+                                    trackListingClick(for: item)
+                                }
                         } label: {
                             modernListingCard(item: item)
                         }
@@ -432,16 +445,29 @@ struct ListingsView: View {
                     .fontWeight(.bold)
                     .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
 
-                // Location
-                if let location = item.location {
+                // Time ago and Click count
+                HStack(spacing: 12) {
+                    // Time ago
                     HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
+                        Image(systemName: "clock.fill")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text(location)
+                        Text(item.timeAgo(from: timeSnapshot))
                             .font(.caption)
-                            .foregroundColor(.black)
+                            .foregroundColor(.secondary)
                             .lineLimit(1)
+                    }
+                    
+                    Spacer()
+                    
+                    // Click count
+                    HStack(spacing: 4) {
+                        Image(systemName: "eye.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(item.clickCount ?? 0)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -455,12 +481,31 @@ struct ListingsView: View {
                 .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
         )
     }
+    
+    // MARK: - Click Tracking
+    private func trackListingClick(for listing: Listing) {
+        guard let listingId = listing.id else { return }
+        
+        // Only track clicks if user is authenticated
+        if authManager.isAuthenticated {
+            viewModel.trackClick(for: listingId, authToken: authManager.authToken) { success, newClickCount in
+                if success {
+                    print("Click tracked successfully, new count: \(newClickCount ?? 0)")
+                    // Refresh listings to show updated count
+                    viewModel.fetchListings()
+                } else {
+                    print("Failed to track click")
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Custom Sort Dropdown
 struct CustomSortDropdown: View {
     @Binding var currentSelection: ListingsView.SortOption
     @Binding var isPresented: Bool
+    let onSelectionChanged: () -> Void
     
     var body: some View {
         VStack(spacing: 4) {
@@ -484,6 +529,7 @@ struct CustomSortDropdown: View {
     private func modernSortOptionRow(option: ListingsView.SortOption) -> some View {
         Button(action: {
             currentSelection = option
+            onSelectionChanged() // Refresh time snapshot when sort changes
             withAnimation(.easeInOut(duration: 0.2)) {
                 isPresented = false
             }

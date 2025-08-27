@@ -138,15 +138,28 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Get all listings
+// Get all listings with click counts
 app.get('/listings', async (req, res) => {
   try {
     const listings = await prisma.listing.findMany({
       include: {
-        user: true
+        user: true,
+        _count: {
+          select: {
+            listingClicks: true
+          }
+        }
       }
     });
-    res.json(listings);
+    
+    // Transform the response to include clickCount
+    const listingsWithClickCount = listings.map(listing => ({
+      ...listing,
+      clickCount: listing._count.listingClicks || 0, // Default to 0 if null
+      _count: undefined // Remove the _count object
+    }));
+    
+    res.json(listingsWithClickCount);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -698,6 +711,11 @@ app.delete('/listings/:id', authenticateToken, async (req, res) => {
       where: { listingId: parseInt(id) }
     });
     
+    // Delete any clicks associated with this listing
+    await prisma.listingClick.deleteMany({
+      where: { listingId: parseInt(id) }
+    });
+    
     // Then delete the listing
     const listing = await prisma.listing.delete({
       where: { id: parseInt(id) }
@@ -748,6 +766,68 @@ app.put('/users/:id', upload.single('image'), async (req, res) => {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'User not found' });
     }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Track a click on a listing (unique per user per listing)
+app.post('/listings/:id/click', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'Invalid listing ID' });
+  }
+  
+  try {
+    const listingId = parseInt(id);
+    const userId = req.user.userId;
+    
+    // Check if listing exists
+    const listing = await prisma.listing.findUnique({
+      where: { id: listingId }
+    });
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    
+    // Try to create a click record (will fail if already exists due to unique constraint)
+    try {
+      await prisma.listingClick.create({
+        data: {
+          userId: userId,
+          listingId: listingId
+        }
+      });
+      
+      // Get updated click count
+      const clickCount = await prisma.listingClick.count({
+        where: { listingId: listingId }
+      });
+      
+      res.json({ 
+        message: 'Click recorded successfully',
+        clickCount: clickCount
+      });
+      
+    } catch (error) {
+      if (error.code === 'P2002') {
+        // Unique constraint violation - user already clicked this listing
+        const clickCount = await prisma.listingClick.count({
+          where: { listingId: listingId }
+        });
+        
+        res.json({ 
+          message: 'Click already recorded for this user',
+          clickCount: clickCount
+        });
+      } else {
+        throw error;
+      }
+    }
+    
+  } catch (error) {
+    console.error('Click tracking error:', error);
     res.status(500).json({ error: error.message });
   }
 });

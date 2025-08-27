@@ -228,7 +228,7 @@ final class ListingViewModel: ObservableObject {
         }.resume()
     }
     
-    func updateListing(id: Int, title: String, price: String, description: String, location: String, imageDataArray: [Data]?, completion: @escaping (Bool) -> Void) {
+    func updateListing(id: Int, title: String, price: String, description: String, location: String, imageDataArray: [Data]?, authToken: String?, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/listings/\(id)") else {
             print("Invalid URL for updating listing")
             completion(false)
@@ -238,6 +238,11 @@ final class ListingViewModel: ObservableObject {
         
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
+        
+        // Add authorization header if token provided
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         
         // Create multipart form data
         let boundary = UUID().uuidString
@@ -311,7 +316,7 @@ final class ListingViewModel: ObservableObject {
         }.resume()
     }
     
-    func deleteListing(id: Int, completion: @escaping (Bool) -> Void) {
+    func deleteListing(id: Int, authToken: String?, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/listings/\(id)") else {
             print("Invalid URL for deleting listing")
             completion(false)
@@ -321,6 +326,11 @@ final class ListingViewModel: ObservableObject {
         
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
+        
+        // Add authorization header if token provided
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
@@ -382,6 +392,58 @@ final class ListingViewModel: ObservableObject {
                 }
             } catch {
                 print("Failed to decode listings: \(error)")
+            }
+        }.resume()
+    }
+    
+    func trackClick(for listingId: Int, authToken: String?, completion: @escaping (Bool, Int?) -> Void) {
+        guard let url = URL(string: "http://localhost:3001/listings/\(listingId)/click") else {
+            print("Invalid URL for tracking click")
+            completion(false, nil)
+            return
+        }
+        print("Tracking click for listing \(listingId) at: \(url)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Add authorization header if token provided
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Network error tracking click: \(error.localizedDescription)")
+                DispatchQueue.main.async { completion(false, nil) }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Click tracking HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("No data received when tracking click")
+                DispatchQueue.main.async { completion(false, nil) }
+                return
+            }
+            
+            print("Click tracking response: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            do {
+                if let response = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let clickCount = response["clickCount"] as? Int {
+                    print("Successfully tracked click, new count: \(clickCount)")
+                    DispatchQueue.main.async { completion(true, clickCount) }
+                } else {
+                    print("Failed to parse click tracking response")
+                    DispatchQueue.main.async { completion(false, nil) }
+                }
+            } catch {
+                print("Failed to decode click tracking response: \(error)")
+                DispatchQueue.main.async { completion(false, nil) }
             }
         }.resume()
     }
