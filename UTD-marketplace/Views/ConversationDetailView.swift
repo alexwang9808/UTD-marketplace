@@ -87,7 +87,7 @@ struct ConversationDetailView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 20)
                     }
-                    .onChange(of: displayMessages.count) { _ in
+                    .onChange(of: displayMessages.count) {
                         // Auto-scroll to the latest message
                         if let lastMessage = displayMessages.sorted(by: { $0.createdAt < $1.createdAt }).last {
                             withAnimation(.easeInOut(duration: 0.5)) {
@@ -116,15 +116,28 @@ struct ConversationDetailView: View {
     // MARK: - Modern Listing Header
     private var modernListingHeader: some View {
         HStack(spacing: 16) {
-            // Listing image without gradient border
-            if let imageUrl = displayListing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 50, height: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                } placeholder: {
+            // Clickable listing image
+            NavigationLink {
+                ListingDetailView(listing: displayListing)
+            } label: {
+                if let imageUrl = displayListing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 50, height: 50)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                                    .font(.title2)
+                            )
+                    }
+                } else {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.gray.opacity(0.3))
                         .frame(width: 50, height: 50)
@@ -134,16 +147,8 @@ struct ConversationDetailView: View {
                                 .font(.title2)
                         )
                 }
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .foregroundColor(.gray)
-                            .font(.title2)
-                    )
             }
+            .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(displayListing.title)
@@ -374,4 +379,5 @@ struct ConversationDetailView: View {
         let timeDifference = nextDate.timeIntervalSince(currentDate)
         return timeDifference > 120 // 2 minutes
     }
+
 } 

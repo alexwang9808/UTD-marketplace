@@ -137,23 +137,33 @@ struct MessagesView: View {
     // MARK: - Modern Conversation Card
     private func modernConversationCard(conversation: Conversation) -> some View {
         HStack(spacing: 16) {
-            // Profile image without gradient border
-            if let imageUrl = conversation.otherUser.imageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+            // Listing image
+            if let imageUrl = conversation.listing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 50, height: 50)
-                        .clipShape(Circle())
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 } placeholder: {
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.gray)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 50, height: 50)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.system(size: 20))
+                                .foregroundColor(.gray)
+                        )
                 }
             } else {
-                Image(systemName: "person.circle.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.gray)
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        Image(systemName: "photo")
+                            .font(.system(size: 20))
+                            .foregroundColor(.gray)
+                    )
             }
             
             // Message content

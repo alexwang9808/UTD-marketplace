@@ -5,6 +5,7 @@ struct MyListingsView: View {
     @EnvironmentObject private var authManager: AuthenticationManager
     @Environment(\.dismiss) private var dismiss
     @State private var selectedListingToEdit: Listing?
+    @State private var timeSnapshot = Date() // Snapshot for time ago calculations
     
     // Computed property to get current user's listings
     private var myListings: [Listing] {
@@ -96,11 +97,30 @@ struct MyListingsView: View {
                                             .foregroundColor(.orange)
                                             .fontWeight(.semibold)
                                         
-                                        if let location = listing.location {
-                                            Text(location)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                                .lineLimit(1)
+                                        // Time ago and Click count
+                                        HStack(spacing: 8) {
+                                            // Time ago
+                                            HStack(spacing: 3) {
+                                                Image(systemName: "clock.fill")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                Text(listing.timeAgo(from: timeSnapshot))
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(1)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            // Click count
+                                            HStack(spacing: 3) {
+                                                Image(systemName: "eye.fill")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                                Text("\(listing.clickCount ?? 0)")
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondary)
+                                            }
                                         }
                                     }
                                     
@@ -143,6 +163,7 @@ struct MyListingsView: View {
             }
             .onAppear {
                 viewModel.fetchListings()
+                timeSnapshot = Date() // Refresh time snapshot when view appears
             }
             .sheet(item: $selectedListingToEdit) { listing in
                 EditListingView(listing: listing)

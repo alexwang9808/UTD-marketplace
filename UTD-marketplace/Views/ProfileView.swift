@@ -425,6 +425,23 @@ struct ProfileView: View {
                                 imageUrl: imageUrl
                             )
                         }
+                        
+                        // Also update the AuthManager's currentUser to keep it in sync
+                        if let authUser = self.authManager.currentUser {
+                            let updatedAuthUser = AuthUser(
+                                id: authUser.id,
+                                email: authUser.email,
+                                name: authUser.name,
+                                imageUrl: imageUrl
+                            )
+                            self.authManager.currentUser = updatedAuthUser
+                            
+                            // Update UserDefaults with the new user data
+                            if let userData = try? JSONEncoder().encode(updatedAuthUser) {
+                                UserDefaults.standard.set(userData, forKey: "current_user_data")
+                            }
+                        }
+                        
                         print("Profile image updated successfully")
                     }
                 }

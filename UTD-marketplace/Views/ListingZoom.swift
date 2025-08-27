@@ -10,6 +10,15 @@ struct ListingDetailView: View {
     @State private var showSuccessMessage = false
     @State private var showingAuthentication = false
     @State private var animateGradient = false
+    
+    // Use live listing data from viewModel if available, fallback to passed listing
+    private var currentListing: Listing {
+        if let listingId = listing.id,
+           let liveListing = viewModel.listings.first(where: { $0.id == listingId }) {
+            return liveListing
+        }
+        return listing
+    }
 
     var body: some View {
         ZStack {
@@ -34,9 +43,9 @@ struct ListingDetailView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // — Modern Image Gallery Card —
                     VStack(spacing: 0) {
-                        if !listing.imageUrls.isEmpty {
+                        if !currentListing.imageUrls.isEmpty {
                             TabView {
-                                ForEach(Array(listing.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
+                                ForEach(Array(currentListing.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
                                     if let url = URL(string: "http://localhost:3001\(imageUrl)") {
                                         AsyncImage(url: url) { phase in
                                             switch phase {
@@ -105,7 +114,7 @@ struct ListingDetailView: View {
                     // — Modern Listing Info Card —
                     VStack(alignment: .leading, spacing: 20) {
                         // Title
-                        Text(listing.title)
+                        Text(currentListing.title)
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
@@ -114,7 +123,7 @@ struct ListingDetailView: View {
                         HStack(spacing: 16) {
                             // Seller profile picture
                             Group {
-                                if let user = listing.user,
+                                if let user = currentListing.user,
                                    let imageUrl = user.imageUrl,
                                    let url = URL(string: "http://localhost:3001\(imageUrl)") {
                                     AsyncImage(url: url) { image in
@@ -143,7 +152,7 @@ struct ListingDetailView: View {
                             .clipShape(Circle())
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(listing.user?.name ?? "User \(listing.userId ?? 0)")
+                                Text(currentListing.user?.name ?? "User \(currentListing.userId ?? 0)")
                                     .font(.headline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.primary)
@@ -153,7 +162,7 @@ struct ListingDetailView: View {
                         }
 
                         // Price
-                        Text("$\(listing.priceString)")
+                        Text("$\(currentListing.priceString)")
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
@@ -166,7 +175,7 @@ struct ListingDetailView: View {
                                     Image(systemName: "clock.fill")
                                         .foregroundColor(.secondary)
                                         .font(.caption)
-                                    Text(listing.timeAgo)
+                                    Text(currentListing.timeAgo)
                                         .font(.body)
                                         .foregroundColor(.secondary)
                                 }
@@ -178,13 +187,13 @@ struct ListingDetailView: View {
                                     Image(systemName: "eye.fill")
                                         .foregroundColor(.secondary)
                                         .font(.caption)
-                                    Text("\(listing.clickCount ?? 0) \((listing.clickCount ?? 0) == 1 ? "click" : "clicks")")
+                                    Text("\(currentListing.clickCount ?? 0) \((currentListing.clickCount ?? 0) == 1 ? "click" : "clicks")")
                                         .font(.body)
                                         .foregroundColor(.secondary)
                                 }
                             }
                             
-                            if let location = listing.location {
+                            if let location = currentListing.location {
                                 HStack(spacing: 8) {
                                     Image(systemName: "location.fill")
                                         .foregroundColor(.secondary)
@@ -198,7 +207,7 @@ struct ListingDetailView: View {
                         }
                         
                         // Description
-                        if let description = listing.description {
+                        if let description = currentListing.description {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Description")
                                     .font(.headline)
@@ -221,7 +230,7 @@ struct ListingDetailView: View {
                     .padding(.horizontal, 16)
 
                     // — Modern Message Composer Card —
-                    if let userId = listing.userId, 
+                    if let userId = currentListing.userId, 
                        let currentUserId = authManager.currentUser?.id,
                        userId != currentUserId {
                         VStack(spacing: 16) {
@@ -256,7 +265,7 @@ struct ListingDetailView: View {
                             if authManager.isAuthenticated {
                                 // Modern message composer for authenticated users
                                 VStack(spacing: 16) {
-                                    Text("Send a message to \(listing.user?.name ?? "User \(userId)")")
+                                    Text("Send a message to \(currentListing.user?.name ?? "User \(userId)")")
                                         .font(.headline)
                                         .fontWeight(.semibold)
                                         .foregroundColor(.primary)
@@ -331,7 +340,7 @@ struct ListingDetailView: View {
                                                 .font(.headline)
                                                 .fontWeight(.semibold)
                                                 .foregroundColor(.primary)
-                                            Text("Sign in to message \(listing.user?.name ?? "the seller")")
+                                            Text("Sign in to message \(currentListing.user?.name ?? "the seller")")
                                                 .font(.body)
                                                 .foregroundColor(.secondary)
                                         }
@@ -386,7 +395,7 @@ struct ListingDetailView: View {
     }
     
     private func sendMessage() {
-        guard let listingId = listing.id,
+        guard let listingId = currentListing.id,
               !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
