@@ -413,11 +413,11 @@ struct ListingsView: View {
                                     .scaledToFill()
                             } placeholder: {
                                 Circle()
-                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                    .fill(Color.gray.opacity(0.3))
                                     .overlay(
                                         Image(systemName: "person.fill")
                                             .font(.system(size: 10))
-                                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                            .foregroundColor(.gray)
                                     )
                             }
                         } else {
@@ -426,7 +426,7 @@ struct ListingsView: View {
                                 .overlay(
                                     Image(systemName: "person.fill")
                                         .font(.system(size: 10))
-                                        .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                        .foregroundColor(.orange)
                                 )
                         }
                     }
@@ -445,7 +445,7 @@ struct ListingsView: View {
                 Text("$\(item.priceString)")
                     .font(.title3)
                     .fontWeight(.bold)
-                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                    .foregroundColor(.orange)
 
                 // Time ago and Click count
                 HStack(spacing: 12) {

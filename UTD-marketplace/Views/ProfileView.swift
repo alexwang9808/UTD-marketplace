@@ -135,6 +135,14 @@ struct ProfileView: View {
                     } 
                 }
                 
+                // Listings count
+                HStack(spacing: 6) {
+                    Text("\(myListingsCount) \(myListingsCount == 1 ? "listing" : "listings")")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .fontWeight(.medium)
+                }
+                
                 if isUpdatingProfile {
                     HStack(spacing: 8) {
                         ProgressView()
