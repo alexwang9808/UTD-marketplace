@@ -4,6 +4,7 @@ struct MessagesView: View {
     @EnvironmentObject var viewModel: ListingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
     @State private var animateGradient = false
+    @State private var showingAuthentication = false
 
     var body: some View {
         NavigationView {
@@ -57,6 +58,9 @@ struct MessagesView: View {
                     viewModel.fetchConversations(for: userId)
                 }
             }
+        }
+        .sheet(isPresented: $showingAuthentication) {
+            AuthenticationView()
         }
     }
     
@@ -253,6 +257,29 @@ struct MessagesView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
+            
+            Button(action: {
+                showingAuthentication = true
+            }) {
+                Text("Sign in")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.orange, .orange.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .shadow(color: .orange.opacity(0.3), radius: 6, x: 0, y: 3)
+                    )
+            }
+            .padding(.top, 8)
             
             Spacer()
         }

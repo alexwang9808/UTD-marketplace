@@ -596,4 +596,5 @@ struct CustomLocationDropdown: View {
         }
         .buttonStyle(.plain)
     }
+
 }

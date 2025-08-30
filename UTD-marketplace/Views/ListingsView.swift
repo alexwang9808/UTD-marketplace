@@ -254,7 +254,7 @@ struct ListingsView: View {
                 if viewModel.listings.isEmpty {
                     modernEmptyState
                 } else {
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, alignment: .center, spacing: 16) {
                         ForEach(sortedListings) { item in
                             NavigationLink {
                                 ListingDetailView(listing: item)
@@ -328,21 +328,22 @@ struct ListingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Modern image with enhanced styling
             Group {
-                if let imageUrl = item.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                if let imageUrl = item.imageUrls.first, let url = URL(string: "http://localhost:3001\(imageUrl)") {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
                             image
                                 .resizable()
                                 .aspectRatio(1, contentMode: .fill)
-                                .frame(maxWidth: .infinity)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
                                 .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                         case .failure(_):
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.red.opacity(0.1))
-                                .aspectRatio(1, contentMode: .fit)
-                                .frame(maxWidth: .infinity)
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .clipped()
                                 .overlay(
                                     VStack(spacing: 8) {
                                         Image(systemName: "exclamationmark.triangle.fill")
@@ -356,8 +357,9 @@ struct ListingsView: View {
                         case .empty:
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.gray.opacity(0.1))
-                                .aspectRatio(1, contentMode: .fit)
-                                .frame(maxWidth: .infinity)
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .clipped()
                                 .overlay(
                                     ProgressView()
                                         .scaleEffect(1.2)
@@ -365,8 +367,9 @@ struct ListingsView: View {
                         @unknown default:
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.gray.opacity(0.1))
-                                .aspectRatio(1, contentMode: .fit)
-                                .frame(maxWidth: .infinity)
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .clipped()
                         }
                     }
                 } else {
@@ -378,8 +381,9 @@ struct ListingsView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .aspectRatio(1, contentMode: .fit)
+                        .aspectRatio(1, contentMode: .fill)
                         .frame(maxWidth: .infinity)
+                        .clipped()
                         .overlay(
                             VStack(spacing: 8) {
                                 Image(systemName: "photo.fill")
@@ -400,6 +404,11 @@ struct ListingsView: View {
                     .fontWeight(.semibold)
                     .lineLimit(2)
                     .foregroundColor(.primary)
+
+                // Price
+                Text("$\(item.priceString)")
+                    .font(.title3)
+                    .fontWeight(.bold)
 
                 // Seller info
                 HStack(spacing: 8) {
@@ -422,12 +431,12 @@ struct ListingsView: View {
                             }
                         } else {
                             Circle()
-                                .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                .fill(Color.gray.opacity(0.2))
                                 .overlay(
-                                    Image(systemName: "person.fill")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.orange)
-                                )
+                                                                          Image(systemName: "person.fill")
+                                          .font(.system(size: 10))
+                                          .foregroundColor(.gray)
+                                  )
                         }
                     }
                     .frame(width: 20, height: 20)
@@ -437,15 +446,10 @@ struct ListingsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
+                        .truncationMode(.tail)
                     
                     Spacer()
                 }
-
-                // Price
-                Text("$\(item.priceString)")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .foregroundColor(.orange)
 
                 // Time ago and Click count
                 HStack(spacing: 12) {
@@ -458,6 +462,7 @@ struct ListingsView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                     
                     Spacer()
@@ -476,6 +481,7 @@ struct ListingsView: View {
             .padding(.horizontal, 12)
             .padding(.bottom, 12)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)

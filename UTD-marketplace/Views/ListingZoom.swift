@@ -119,6 +119,12 @@ struct ListingDetailView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
 
+                        // Price
+                        Text("$\(currentListing.priceString)")
+                            .font(.title)
+                            .fontWeight(.bold)
+        
+                        
                         // Seller info section (clickable)
                         if let user = currentListing.user {
                             NavigationLink(destination: SellerProfileView(seller: user)) {
@@ -133,7 +139,7 @@ struct ListingDetailView: View {
                                                     .scaledToFill()
                                             } placeholder: {
                                                 Circle()
-                                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                                    .fill(Color(red: 0.0, green: 0, blue: 0).opacity(0.2))
                                                     .overlay(
                                                         ProgressView()
                                                             .scaleEffect(0.8)
@@ -141,11 +147,11 @@ struct ListingDetailView: View {
                                             }
                                         } else {
                                             Circle()
-                                                .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                                .fill(Color.gray.opacity(0.3))
                                                 .overlay(
                                                     Image(systemName: "person.fill")
                                                         .font(.system(size: 20))
-                                                        .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                                        .foregroundColor(.gray)
                                                 )
                                         }
                                     }
@@ -172,12 +178,12 @@ struct ListingDetailView: View {
                             // Fallback for when user data is not available
                             HStack(spacing: 16) {
                                 Circle()
-                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2))
+                                    .fill(Color.gray.opacity(0.2))
                                     .frame(width: 50, height: 50)
                                     .overlay(
                                         Image(systemName: "person.fill")
                                             .font(.system(size: 20))
-                                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                            .foregroundColor(.gray)
                                     )
                                 
                                 VStack(alignment: .leading, spacing: 4) {
@@ -190,12 +196,6 @@ struct ListingDetailView: View {
                                 Spacer()
                             }
                         }
-
-                        // Price
-                        Text("$\(currentListing.priceString)")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                         
                         // Description
                         if let description = currentListing.description {

@@ -72,7 +72,7 @@ struct SellerProfileView: View {
                                 }
                             } else {
                                 Circle()
-                                    .fill(Color.gray.opacity(0.3))
+                                    .fill(Color.gray.opacity(0.2))
                                     .frame(width: 100, height: 100)
                                     .overlay(
                                         Image(systemName: "person.fill")
@@ -98,14 +98,7 @@ struct SellerProfileView: View {
                                     .multilineTextAlignment(.center)
                                     .lineLimit(3)
                             }
-                            
-                            // Listings count
-                            HStack(spacing: 6) {
-                                Text("\(sellerListingsCount) \(sellerListingsCount == 1 ? "listing" : "listings")")
-                                    .font(.body)
-                                    .foregroundColor(.secondary)
-                                    .fontWeight(.medium)
-                            }
+
                         }
                     }
                     .padding(.horizontal, 24)
@@ -114,7 +107,7 @@ struct SellerProfileView: View {
                     if !sellerListings.isEmpty {
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("Listings")
+                                Text("\(sellerListingsCount) \(sellerListingsCount == 1 ? "listing" : "listings")")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.primary)
@@ -190,7 +183,6 @@ struct SellerProfileView: View {
                 Text("$\(listing.priceString)")
                     .font(.title3)
                     .fontWeight(.bold)
-                    .foregroundColor(.orange)
                 
                 // Time and clicks
                 HStack(spacing: 8) {
