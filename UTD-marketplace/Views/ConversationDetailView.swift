@@ -300,7 +300,7 @@ struct ConversationDetailView: View {
                 let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !text.isEmpty else { return }
                 
-                viewModel.sendMessage(to: listingId, content: text, authToken: authManager.authToken) { success in
+                viewModel.sendMessage(to: listingId, content: text, authToken: authManager.authToken, userId: authManager.currentUser?.id) { success in
                     if success {
                         newMessage = ""
                     }

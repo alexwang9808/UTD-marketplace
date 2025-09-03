@@ -442,7 +442,8 @@ struct ListingDetailView: View {
         viewModel.sendMessage(
             to: listingId,
             content: messageText.trimmingCharacters(in: .whitespacesAndNewlines),
-            authToken: authManager.authToken
+            authToken: authManager.authToken,
+            userId: authManager.currentUser?.id
         ) { success in
             DispatchQueue.main.async {
                 self.isSendingMessage = false
@@ -452,7 +453,9 @@ struct ListingDetailView: View {
                     self.showSuccessMessage = true
                     
                     // Refresh conversations so they appear in Messages tab
-                    self.viewModel.fetchConversations()
+                    if let userId = self.authManager.currentUser?.id {
+                        self.viewModel.fetchConversations(for: userId)
+                    }
                 } else {
                     // Could add error handling here
                     print("Failed to send message")

@@ -16,11 +16,11 @@ struct SignUpView: View {
             VStack(spacing: 16) {
                 // Name Field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Full Name")
+                    Text("Profile Name")
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    TextField("Enter your full name", text: $name)
+                    TextField("Enter your username", text: $name)
                         .textFieldStyle(.roundedBorder)
                         .textInputAutocapitalization(.words)
                 }
@@ -31,10 +31,9 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    TextField("yourname@utdallas.edu", text: $email)
+                    TextField("utdallas.edu email", text: $email)
                         .textFieldStyle(.roundedBorder)
                         .textInputAutocapitalization(.never)
-                        .keyboardType(.emailAddress)
                         .autocorrectionDisabled()
                 }
                 

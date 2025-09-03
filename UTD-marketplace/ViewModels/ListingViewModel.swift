@@ -83,7 +83,7 @@ final class ListingViewModel: ObservableObject {
     }
 
     /// Sends a new message to the backend
-    func sendMessage(to listingId: Int, content: String, authToken: String?, completion: @escaping (Bool) -> Void) {
+    func sendMessage(to listingId: Int, content: String, authToken: String?, userId: Int? = nil, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "http://localhost:3001/messages") else {
             print("Invalid URL for sending message")
             completion(false)
@@ -132,7 +132,9 @@ final class ListingViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.messages[listingId, default: []].append(message)
                     // Refresh conversations to show the new message
-                    self?.fetchConversations()
+                    if let userId = userId {
+                        self?.fetchConversations(for: userId)
+                    }
                     completion(true)
                 }
             } else {
