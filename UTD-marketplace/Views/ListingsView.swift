@@ -280,27 +280,12 @@ struct ListingsView: View {
         VStack(spacing: 24) {
             Spacer()
             
-            // Fun shopping illustration
+            // Simple shopping illustration
             ZStack {
-                Circle()
-                    .fill(LinearGradient(colors: [.orange.opacity(0.2), .yellow.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 100, height: 100)
-                    .offset(x: -15, y: -10)
                 
-                Circle()
-                    .fill(LinearGradient(colors: [.blue.opacity(0.2), .purple.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 80, height: 80)
-                    .offset(x: 20, y: 15)
-                
-                Image(systemName: "bag.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.orange, .red, .pink],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                Image(systemName: "cart")
+                    .font(.system(size: 70, weight: .regular))
+                    .foregroundColor(.orange)
             }
             .scaleEffect(animateGradient ? 1.05 : 1.0)
             .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: animateGradient)
@@ -310,11 +295,7 @@ struct ListingsView: View {
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
-                
-                Text("Be the first to add a listing!")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+    
             }
             
             Spacer()

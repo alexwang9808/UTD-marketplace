@@ -69,29 +69,13 @@ struct MessagesView: View {
         VStack(spacing: 24) {
             Spacer()
             
-            // Fun message bubble illustration
+            // Simple message bubble illustration
             ZStack {
-                // Background bubbles
-                Circle()
-                    .fill(LinearGradient(colors: [.blue.opacity(0.2), .purple.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 100, height: 100)
-                    .offset(x: -20, y: -10)
+       
                 
-                Circle()
-                    .fill(LinearGradient(colors: [.pink.opacity(0.2), .orange.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 80, height: 80)
-                    .offset(x: 25, y: 15)
-                
-                // Main message icon
-                Image(systemName: "message.circle.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .purple, .pink],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                Image(systemName: "message")
+                    .font(.system(size: 65, weight: .regular))
+                    .foregroundColor(.blue)
             }
             .scaleEffect(animateGradient ? 1.05 : 1.0)
             .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animateGradient)
@@ -100,19 +84,9 @@ struct MessagesView: View {
                 Text("No conversations yet")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.primary, .blue],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.primary)
                 
-                Text("Send a message to start a new conversation!")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+  
             }
             
             Spacer()
