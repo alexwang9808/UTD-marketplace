@@ -85,6 +85,7 @@ struct ListingsView: View {
                     )
                     .frame(height: 4)
                     .edgesIgnoringSafeArea(.horizontal)
+                    .padding(.top, -10)
                     
                     // Listings content
                     modernListingsContent

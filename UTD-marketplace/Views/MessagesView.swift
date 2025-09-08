@@ -91,7 +91,8 @@ struct MessagesView: View {
             
             Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .padding(.top, -40)
     }
     
     // MARK: - Modern Conversations List
