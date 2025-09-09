@@ -3,28 +3,15 @@ import SwiftUI
 struct MessagesView: View {
     @EnvironmentObject var viewModel: ListingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
-    @State private var animateGradient = false
     @State private var showingAuthentication = false
+    @State private var pressedConversationId: String? = nil
 
     var body: some View {
         NavigationView {
             ZStack {
-                // Modern gradient background
-                LinearGradient(
-                    colors: [
-                        Color.blue.opacity(0.05),
-                        Color.purple.opacity(0.05),
-                        Color.pink.opacity(0.05)
-                    ],
-                    startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                    endPoint: animateGradient ? .bottomTrailing : .topLeading
-                )
-                .ignoresSafeArea()
-                .onAppear {
-                    withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
-                        animateGradient.toggle()
-                    }
-                }
+                // Clean background
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     // Modern orange accent bar
@@ -77,8 +64,6 @@ struct MessagesView: View {
                     .font(.system(size: 65, weight: .regular))
                     .foregroundColor(.blue)
             }
-            .scaleEffect(animateGradient ? 1.05 : 1.0)
-            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animateGradient)
             
             VStack(spacing: 12) {
                 Text("No conversations yet")
@@ -98,14 +83,25 @@ struct MessagesView: View {
     // MARK: - Modern Conversations List
     private var modernConversationsList: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 0) {
                 ForEach(viewModel.conversations) { conversation in
                     NavigationLink {
                         ConversationDetailView(conversation: conversation)
                     } label: {
-                        modernConversationCard(conversation: conversation)
+                        modernConversationCard(conversation: conversation, isPressed: pressedConversationId == conversation.id)
                     }
                     .buttonStyle(PlainButtonStyle())
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                pressedConversationId = conversation.id
+                            }
+                            .onEnded { _ in
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                    pressedConversationId = nil
+                                }
+                            }
+                    )
                 }
             }
             .padding(.horizontal, 16)
@@ -114,8 +110,8 @@ struct MessagesView: View {
     }
     
     // MARK: - Modern Conversation Card
-    private func modernConversationCard(conversation: Conversation) -> some View {
-        HStack(spacing: 16) {
+    private func modernConversationCard(conversation: Conversation, isPressed: Bool = false) -> some View {
+        return HStack(spacing: 16) {
             // Listing image
             if let imageUrl = conversation.listing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
                 AsyncImage(url: url) { image in
@@ -165,13 +161,13 @@ struct MessagesView: View {
                     
                     Spacer()
                     
-                    Text(formatDate(conversation.lastMessage.createdAt))
+                    Text(conversation.lastMessage.timeAgo)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                 }
                 
-                Text(conversation.lastMessage.content)
+                Text(conversation.lastMessage.displayContent)
                     .font(.body)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
@@ -180,13 +176,18 @@ struct MessagesView: View {
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
-                .shadow(color: .black.opacity(0.04), radius: 1, x: 0, y: 1)
+            ZStack {
+                // Base white rectangle background
+                Rectangle()
+                    .fill(Color.white)
+                
+                // Gray bubble overlay when pressed
+                if isPressed {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.2))
+                }
+            }
         )
-        .scaleEffect(0.98)
-        .animation(.easeInOut(duration: 0.1), value: false)
     }
     
     // MARK: - Modern Anonymous State
@@ -211,8 +212,6 @@ struct MessagesView: View {
                         )
                     )
             }
-            .scaleEffect(animateGradient ? 1.05 : 1.0)
-            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: animateGradient)
             
             VStack(spacing: 12) {
                 Text("Sign in to view messages")

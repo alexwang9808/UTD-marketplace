@@ -36,11 +36,17 @@ final class ListingViewModel: ObservableObject {
             do {
                 let fetchedConversations = try JSONDecoder().decode([Conversation].self, from: data)
                 print("Successfully decoded \(fetchedConversations.count) conversations")
+                print("DEBUG: Conversation titles: \(fetchedConversations.map { $0.listing.title })")
                 DispatchQueue.main.async {
                     self?.conversations = fetchedConversations
+                    print("DEBUG: Updated conversations array, count: \(self?.conversations.count ?? 0)")
                 }
             } catch {
                 print("Failed to decode conversations: \(error)")
+                print("DEBUG: Decoding error details: \(error.localizedDescription)")
+                if let decodingError = error as? DecodingError {
+                    print("DEBUG: Detailed decoding error: \(decodingError)")
+                }
             }
         }.resume()
     }
@@ -139,6 +145,87 @@ final class ListingViewModel: ObservableObject {
                 }
             } else {
                 print("Failed to decode sent message response")
+                DispatchQueue.main.async { completion(false) }
+            }
+        }.resume()
+    }
+
+    /// Sends an image message to the backend
+    func sendImageMessage(to listingId: Int, imageData: Data, authToken: String?, userId: Int? = nil, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "http://localhost:3001/messages") else {
+            print("Invalid URL for sending image message")
+            completion(false)
+            return
+        }
+        print("Sending image message to: \(url)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        // Add Authorization header if token is provided
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        // Create multipart form data
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        var body = Data()
+        
+        // Add listingId field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"listingId\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(listingId)\r\n".data(using: .utf8)!)
+        
+        // Add messageType field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"messageType\"\r\n\r\n".data(using: .utf8)!)
+        body.append("image\r\n".data(using: .utf8)!)
+        
+        // Add image
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+        
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        print("Image message request body size: \(body.count) bytes")
+        
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            if let error = error {
+                print("Network error sending image message: \(error.localizedDescription)")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Send image message HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data else {
+                print("No data received when sending image message")
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
+            
+            print("Send image message response: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
+            
+            if let message = try? JSONDecoder().decode(Message.self, from: data) {
+                print("Successfully sent image message")
+                DispatchQueue.main.async {
+                    self?.messages[listingId, default: []].append(message)
+                    // Refresh conversations to show the new message
+                    if let userId = userId {
+                        self?.fetchConversations(for: userId)
+                    }
+                    completion(true)
+                }
+            } else {
+                print("Failed to decode sent image message response")
                 DispatchQueue.main.async { completion(false) }
             }
         }.resume()

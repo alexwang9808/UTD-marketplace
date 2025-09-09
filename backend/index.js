@@ -641,16 +641,28 @@ app.put('/listings/:id', authenticateToken, upload.array('images', 5), async (re
   }
 });
 
-// Create a new message
-app.post('/messages', authenticateToken, async (req, res) => {
-  const { content, listingId } = req.body;
-  if (!content || !listingId) {
-    return res.status(400).json({ error: 'Missing required fields: content, listingId' });
+// Create a new message (text or image)
+app.post('/messages', authenticateToken, upload.single('image'), async (req, res) => {
+  const { content, listingId, messageType = 'text' } = req.body;
+  
+  // Validate that we have either content or an image
+  if (!content && !req.file) {
+    return res.status(400).json({ error: 'Message must have either content or an image' });
   }
+  
+  if (!listingId) {
+    return res.status(400).json({ error: 'Missing required field: listingId' });
+  }
+  
   try {
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const finalMessageType = req.file ? 'image' : 'text';
+    
     const message = await prisma.message.create({
       data: {
-        content,
+        content: content || null,
+        imageUrl,
+        messageType: finalMessageType,
         userId: req.user.userId, // Use authenticated user's ID
         listingId: parseInt(listingId),
       },

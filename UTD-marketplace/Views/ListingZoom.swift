@@ -5,11 +5,12 @@ struct ListingDetailView: View {
 
     @EnvironmentObject private var viewModel: ListingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
+    @Environment(\.dismiss) private var dismiss
     @State private var messageText = ""
     @State private var isSendingMessage = false
     @State private var showSuccessMessage = false
     @State private var showingAuthentication = false
-    @State private var animateGradient = false
+    @State private var pressedSellerProfile = false
     
     // Use live listing data from viewModel if available, fallback to passed listing
     private var currentListing: Listing {
@@ -22,22 +23,9 @@ struct ListingDetailView: View {
 
     var body: some View {
         ZStack {
-            // Modern gradient background
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.03),
-                    Color.purple.opacity(0.03),
-                    Color.pink.opacity(0.03)
-                ],
-                startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                endPoint: animateGradient ? .bottomTrailing : .topLeading
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                    animateGradient.toggle()
-                }
-            }
+            // Clean background
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
@@ -172,8 +160,36 @@ struct ListingDetailView: View {
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(
+                                    ZStack {
+                                        // Base clear background that fills entire area
+                                        Rectangle()
+                                            .fill(Color.clear)
+                                        
+                                        // Gray bubble overlay when pressed
+                                        if pressedSellerProfile {
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .fill(Color.gray.opacity(0.2))
+                                        }
+                                    }
+                                )
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .simultaneousGesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { _ in
+                                        pressedSellerProfile = true
+                                    }
+                                    .onEnded { _ in
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                            pressedSellerProfile = false
+                                        }
+                                    }
+                            )
                         } else {
                             // Fallback for when user data is not available
                             HStack(spacing: 16) {
@@ -420,6 +436,18 @@ struct ListingDetailView: View {
         }
         .navigationTitle("Listing")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.black)
+                }
+            }
+        }
         .sheet(isPresented: $showingAuthentication) {
             AuthenticationView()
         }

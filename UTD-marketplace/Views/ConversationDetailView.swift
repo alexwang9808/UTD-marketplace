@@ -8,9 +8,11 @@ struct ConversationDetailView: View {
     
     @EnvironmentObject private var viewModel: ListingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
+    @Environment(\.dismiss) private var dismiss
 
     @State private var newMessage = ""
-    @State private var animateGradient = false
+    @State private var isTyping = false
+    @FocusState private var isTextFieldFocused: Bool
     
     // Computed properties to handle both cases
     private var displayListing: Listing {
@@ -46,24 +48,13 @@ struct ConversationDetailView: View {
 
     var body: some View {
         ZStack {
-            // Modern gradient background
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.03),
-                    Color.purple.opacity(0.03),
-                    Color.pink.opacity(0.03)
-                ],
-                startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                endPoint: animateGradient ? .bottomTrailing : .topLeading
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                    animateGradient.toggle()
+            // Clean background
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
+                .onAppear {
+                    // Fetch messages for this specific listing when view appears
+                    viewModel.fetchMessages(for: listingId)
                 }
-                // Fetch messages for this specific listing when view appears
-                viewModel.fetchMessages(for: listingId)
-            }
             
             VStack(spacing: 0) {
                 // Modern listing header card
@@ -111,6 +102,18 @@ struct ConversationDetailView: View {
         }
         .navigationTitle(displayOtherUser.name ?? displayOtherUser.email)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.black)
+                }
+            }
+        }
     }
     
     // MARK: - Modern Listing Header
@@ -201,8 +204,6 @@ struct ConversationDetailView: View {
                         )
                     )
             }
-            .scaleEffect(animateGradient ? 1.05 : 1.0)
-            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: animateGradient)
             
             VStack(spacing: 12) {
                 Text("No messages yet")
@@ -235,34 +236,12 @@ struct ConversationDetailView: View {
             if isSender { Spacer(minLength: 60) }
             
             VStack(alignment: isSender ? .trailing : .leading, spacing: 6) {
-                // Message bubble
-                Text(message.content)
-                    .font(.body)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(
-                                isSender
-                                    ? LinearGradient(
-                                        colors: [Color(red: 0.0, green: 0.4, blue: 0.2), Color(red: 0.0, green: 0.5, blue: 0.3)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                    : LinearGradient(
-                                        colors: [Color.white, Color.gray.opacity(0.05)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                            )
-                            .shadow(
-                                color: isSender ? Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3) : .black.opacity(0.08),
-                                radius: 8,
-                                x: 0,
-                                y: 4
-                            )
-                    )
-                    .foregroundColor(isSender ? .white : .primary)
+                // Message content based on type
+                if message.type == .image {
+                    modernImageMessage(message: message, isSender: isSender)
+                } else {
+                    modernTextMessage(message: message, isSender: isSender)
+                }
                 
                 // Message metadata (only show if showTimestamp is true)
                 if showTimestamp {
@@ -279,64 +258,64 @@ struct ConversationDetailView: View {
         }
     }
     
-    // MARK: - Modern Input Bar
+    // MARK: - Modern Native Input Bar
     private var modernInputBar: some View {
         HStack(spacing: 12) {
-            // Modern text field
-            HStack(spacing: 8) {
-                TextField("Type a message...", text: $newMessage)
-                    .font(.body)
+            // Message input container
+            HStack(spacing: 12) {
+                // Text field with native keyboard
+                TextField("Message...", text: $newMessage)
+                    .font(.system(size: 16))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 25)
-                            .fill(Color.white)
-                            .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
-                    )
-            }
-            
-            // Modern send button
-            Button(action: {
-                let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !text.isEmpty else { return }
-                
-                viewModel.sendMessage(to: listingId, content: text, authToken: authManager.authToken, userId: authManager.currentUser?.id) { success in
-                    if success {
-                        newMessage = ""
+                    .focused($isTextFieldFocused)
+                    .onChange(of: newMessage) {
+                        isTyping = !newMessage.isEmpty
                     }
-                }
-            }) {
-                Image(systemName: "paperplane.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .background(
-                        Circle()
-                            .fill(
-                                newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                    ? LinearGradient(colors: [.gray.opacity(0.5), .gray.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                    : LinearGradient(colors: [Color(red: 0.0, green: 0.4, blue: 0.2), Color(red: 0.0, green: 0.5, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .shadow(
-                                color: newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                    ? .clear
-                                    : Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3),
-                                radius: 8,
-                                x: 0,
-                                y: 4
-                            )
-                    )
+                    .onSubmit {
+                        if !newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            sendTextMessage()
+                        }
+                    }
             }
-            .disabled(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .scaleEffect(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.9 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .background(
+                RoundedRectangle(cornerRadius: 22)
+                    .fill(Color.gray.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22)
+                            .stroke(isTextFieldFocused ? Color.orange.opacity(0.5) : Color.gray.opacity(0.2), lineWidth: 1.5)
+                    )
+            )
+            
+            // Send button (only show when typing)
+            if !newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Button(action: sendTextMessage) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.orange, .orange.opacity(0.8)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: newMessage.isEmpty)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
             Rectangle()
-                .fill(Color.white.opacity(0.95))
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: -2)
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
         )
     }
     
@@ -379,5 +358,86 @@ struct ConversationDetailView: View {
         let timeDifference = nextDate.timeIntervalSince(currentDate)
         return timeDifference > 120 // 2 minutes
     }
+    
+    // MARK: - Message Components
+    private func modernTextMessage(message: Message, isSender: Bool) -> some View {
+        Text(message.displayContent)
+            .font(.system(size: 16))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        isSender
+                            ? LinearGradient(
+                                colors: [.orange, .orange.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            : LinearGradient(
+                                colors: [Color.gray.opacity(0.1), Color.gray.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                    )
+            )
+            .foregroundColor(isSender ? .white : .primary)
+    }
+    
+    private func modernImageMessage(message: Message, isSender: Bool) -> some View {
+        Group {
+            if let imageUrl = message.imageUrl,
+               let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(maxWidth: 200, maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 200, height: 200)
+                        .overlay(
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        )
+                }
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.red.opacity(0.1))
+                    .frame(width: 200, height: 200)
+                    .overlay(
+                        VStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.title2)
+                                .foregroundColor(.red)
+                            Text("Failed to load image")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                    )
+            }
+        }
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+    
+    // MARK: - Message Actions
+    private func sendTextMessage() {
+        let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        
+        viewModel.sendMessage(to: listingId, content: text, authToken: authManager.authToken, userId: authManager.currentUser?.id) { success in
+            if success {
+                newMessage = ""
+                isTyping = false
+            }
+        }
+    }
+    
 
 } 

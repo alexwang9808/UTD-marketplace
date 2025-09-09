@@ -40,7 +40,9 @@ model Listing {
 
 model Message {
   id         Int      @id @default(autoincrement())
-  content    String
+  content    String?  // Make content optional for image-only messages
+  imageUrl   String?  // Add image support
+  messageType String  @default("text") // "text", "image", or "system"
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])
   userId     Int

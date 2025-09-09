@@ -11,7 +11,6 @@ struct ProfileView: View {
     @State private var showingAddListing = false
     @State private var showingMyListings = false
     @State private var showingLogoutAlert = false
-    @State private var animateGradient = false
     @State private var showingSettingsDropdown = false
     
     // Computed property to get current user's listings count
@@ -23,22 +22,9 @@ struct ProfileView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Modern gradient background
-                LinearGradient(
-                    colors: [
-                        Color.blue.opacity(0.03),
-                        Color.purple.opacity(0.03),
-                        Color.pink.opacity(0.03)
-                    ],
-                    startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                    endPoint: animateGradient ? .bottomTrailing : .topLeading
-                )
-                .ignoresSafeArea()
-                .onAppear {
-                    withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                        animateGradient.toggle()
-                    }
-                }
+                // Clean background
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     // Modern orange accent bar
@@ -85,7 +71,28 @@ struct ProfileView: View {
                 AddListingView()
             }
             .sheet(isPresented: $showingMyListings) {
-                MyListingsView()
+                VStack(spacing: 0) {
+                    // Simple X button at the top
+                    HStack {
+                        Button(action: {
+                            showingMyListings = false
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.black)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(UIColor.systemBackground))
+                    
+                    MyListingsView()
+                }
+                .presentationDragIndicator(.hidden)
+                .presentationDetents([.large])
+                .presentationBackgroundInteraction(.disabled)
             }
             .sheet(isPresented: $showingEditProfile) {
                 if let user = currentUser {

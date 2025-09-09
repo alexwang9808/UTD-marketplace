@@ -4,7 +4,8 @@ struct SellerProfileView: View {
     let seller: User
     @EnvironmentObject private var viewModel: ListingViewModel
     @EnvironmentObject private var authManager: AuthenticationManager
-    @State private var animateGradient = false
+    @Environment(\.dismiss) private var dismiss
+    @State private var pressedListingId: Int? = nil
     
     // Computed property to get seller's listings count
     private var sellerListingsCount: Int {
@@ -19,23 +20,10 @@ struct SellerProfileView: View {
     }
     
     var body: some View {
-        ZStack {
-            // Modern gradient background
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.03),
-                    Color.purple.opacity(0.03),
-                    Color.pink.opacity(0.03)
-                ],
-                startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                endPoint: animateGradient ? .bottomTrailing : .topLeading
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                    animateGradient.toggle()
-                }
-            }
+            ZStack {
+                // Clean background
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 24) {
@@ -121,9 +109,20 @@ struct SellerProfileView: View {
                             ], spacing: 16) {
                                 ForEach(sellerListings, id: \.id) { listing in
                                     NavigationLink(destination: ListingDetailView(listing: listing)) {
-                                        sellerListingCard(listing: listing)
+                                        sellerListingCard(listing: listing, isPressed: pressedListingId == listing.id)
                                     }
                                     .buttonStyle(PlainButtonStyle())
+                                    .simultaneousGesture(
+                                        DragGesture(minimumDistance: 0)
+                                            .onChanged { _ in
+                                                pressedListingId = listing.id
+                                            }
+                                            .onEnded { _ in
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                                    pressedListingId = nil
+                                                }
+                                            }
+                                    )
                                 }
                             }
                             .padding(.horizontal, 24)
@@ -136,10 +135,22 @@ struct SellerProfileView: View {
         }
         .navigationTitle(seller.name ?? "Profile")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.black)
+                }
+            }
+        }
     }
     
     @ViewBuilder
-    private func sellerListingCard(listing: Listing) -> some View {
+    private func sellerListingCard(listing: Listing, isPressed: Bool = false) -> some View {
         VStack(spacing: 0) {
             // Image
             if let imageUrl = listing.primaryImageUrl,
@@ -211,7 +222,18 @@ struct SellerProfileView: View {
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color.white)
+        .background(
+            ZStack {
+                // Base white rounded rectangle background
+                Color.white
+                
+                // Gray bubble overlay when pressed
+                if isPressed {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.2))
+                }
+            }
+        )
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
     }

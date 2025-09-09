@@ -8,9 +8,9 @@ struct ListingsView: View {
     @State private var searchText = ""
     @State private var isSearching = false
     @FocusState private var isSearchFieldFocused: Bool
-    @State private var animateGradient = false
     @State private var showingSortSheet = false
     @State private var timeSnapshot = Date() // Snapshot for time ago calculations
+    @State private var pressedListingId: Int? = nil
 
     private let columns = [
         GridItem(.flexible()),
@@ -57,24 +57,15 @@ struct ListingsView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Modern gradient background
-                LinearGradient(
-                    colors: [
-                        Color.blue.opacity(0.03),
-                        Color.purple.opacity(0.03),
-                        Color.pink.opacity(0.03)
-                    ],
-                    startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                    endPoint: animateGradient ? .bottomTrailing : .topLeading
-                )
-                .ignoresSafeArea()
-                .onAppear {
-                    withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                        animateGradient.toggle()
+                // Clean background
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
+                    .onAppear {
+                        // Refresh time snapshot when view appears
+                        timeSnapshot = Date()
+                        // Ensure listings are fetched when view appears
+                        viewModel.fetchListings()
                     }
-                    // Refresh time snapshot when view appears
-                    timeSnapshot = Date()
-                }
                 
                 VStack(spacing: 0) {
                     // Modern orange accent bar
@@ -264,9 +255,20 @@ struct ListingsView: View {
                                         trackListingClick(for: item)
                                     }
                             } label: {
-                                modernListingCard(item: item)
+                                modernListingCard(item: item, isPressed: pressedListingId == item.id)
                             }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { _ in
+                                        pressedListingId = item.id
+                                    }
+                                    .onEnded { _ in
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                                            pressedListingId = nil
+                                        }
+                                    }
+                            )
                         }
                     }
                     .padding(.horizontal, 16)
@@ -288,8 +290,6 @@ struct ListingsView: View {
                     .font(.system(size: 70, weight: .regular))
                     .foregroundColor(.orange)
             }
-            .scaleEffect(animateGradient ? 1.05 : 1.0)
-            .animation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true), value: animateGradient)
             
             VStack(spacing: 12) {
                 Text("No listings yet")
@@ -306,7 +306,7 @@ struct ListingsView: View {
     }
     
     // MARK: - Modern Listing Card
-    private func modernListingCard(item: Listing) -> some View {
+    private func modernListingCard(item: Listing, isPressed: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             // Modern image with enhanced styling
             Group {
@@ -465,10 +465,19 @@ struct ListingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+            ZStack {
+                // Base white rounded rectangle background
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white)
+                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                    .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+                
+                // Gray bubble overlay when pressed
+                if isPressed {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.2))
+                }
+            }
         )
     }
     

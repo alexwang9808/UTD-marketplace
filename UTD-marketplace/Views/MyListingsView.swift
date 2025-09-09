@@ -14,16 +14,15 @@ struct MyListingsView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Orange line right below navigation bar
-                Rectangle()
-                    .fill(Color.orange)
-                    .frame(height: 4)
-                    .edgesIgnoringSafeArea(.horizontal)
-                    .padding(.top, -10)
-                
-                if myListings.isEmpty {
+        VStack(spacing: 0) {
+            // Orange line right below navigation bar
+            Rectangle()
+                .fill(Color.orange)
+                .frame(height: 4)
+                .edgesIgnoringSafeArea(.horizontal)
+                .padding(.top, -10)
+            
+            if myListings.isEmpty {
                     // Empty state
                     VStack(spacing: 20) {
                         Spacer()
@@ -170,7 +169,7 @@ struct MyListingsView: View {
             }
         }
     }
-}
+
 
 #Preview {
     MyListingsView()
