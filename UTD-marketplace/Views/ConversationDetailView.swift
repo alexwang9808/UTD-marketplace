@@ -70,7 +70,8 @@ struct ConversationDetailView: View {
                                 let sortedMessages = displayMessages.sorted { $0.createdAt < $1.createdAt }
                                 ForEach(Array(sortedMessages.enumerated()), id: \.element.id) { index, message in
                                     let shouldShowTime = shouldShowTimestamp(for: message, at: index, in: sortedMessages)
-                                    modernMessageBubble(message: message, showTimestamp: shouldShowTime)
+                                    let shouldShowProfilePicture = shouldShowProfilePicture(for: message, at: index, in: sortedMessages)
+                                    modernMessageBubble(message: message, showTimestamp: shouldShowTime, showProfilePicture: shouldShowProfilePicture)
                                         .id(message.id)
                                 }
                             }
@@ -229,32 +230,99 @@ struct ConversationDetailView: View {
         .padding(.top, 40)
     }
     
+    // MARK: - Other User Profile Picture
+    @ViewBuilder
+    private var otherUserProfilePicture: some View {
+        if let imageUrl = displayOtherUser.imageUrl,
+           let url = URL(string: "http://localhost:3001\(imageUrl)") {
+            AsyncImage(url: url) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+            } placeholder: {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray)
+                    )
+            }
+        } else {
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 32, height: 32)
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.gray)
+                )
+        }
+    }
+    
     // MARK: - Modern Message Bubble
-    private func modernMessageBubble(message: Message, showTimestamp: Bool = true) -> some View {
-        HStack {
-            let isSender = message.isFromCurrentUser(currentUserId: authManager.currentUser?.id ?? -1)
-            if isSender { Spacer(minLength: 60) }
-            
-            VStack(alignment: isSender ? .trailing : .leading, spacing: 6) {
-                // Message content based on type
+    private func modernMessageBubble(message: Message, showTimestamp: Bool = true, showProfilePicture: Bool = true) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Message bubble with profile picture
+            HStack(alignment: .bottom, spacing: 8) {
+                let isSender = message.isFromCurrentUser(currentUserId: authManager.currentUser?.id ?? -1)
+                
+                if isSender { 
+                    Spacer(minLength: 60) 
+                } else {
+                    // Other user's profile picture - only show if showProfilePicture is true
+                    if showProfilePicture {
+                        otherUserProfilePicture
+                    } else {
+                        // Invisible spacer to maintain consistent spacing when no profile picture
+                        Spacer()
+                            .frame(width: 32, height: 32)
+                    }
+                }
+                
+                // Just the message content (no timestamp here)
                 if message.type == .image {
                     modernImageMessage(message: message, isSender: isSender)
                 } else {
                     modernTextMessage(message: message, isSender: isSender)
                 }
                 
-                // Message metadata (only show if showTimestamp is true)
-                if showTimestamp {
-                    HStack(spacing: 6) {
-                        Text(formatTime(message.createdAt))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 4)
-                }
+                if !isSender { Spacer(minLength: 60) }
             }
             
-            if !isSender { Spacer(minLength: 60) }
+            // Timestamp below the message bubble (separate from alignment)
+            if showTimestamp {
+                let isSender = message.isFromCurrentUser(currentUserId: authManager.currentUser?.id ?? -1)
+                HStack {
+                    if !isSender {
+                        // Add spacing to align with message content (account for PFP + spacing)
+                        Spacer()
+                            .frame(width: 32 + 8) // PFP width + spacing
+                        
+                        HStack(spacing: 6) {
+                            Text(formatTime(message.createdAt))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 4)
+                        
+                        Spacer()
+                    } else {
+                        // For sender messages, align timestamp to the bottom right edge of the bubble
+                        Spacer()
+                        
+                        HStack(spacing: 6) {
+                            Text(formatTime(message.createdAt))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 4)
+                    }
+                }
+            }
         }
     }
     
@@ -336,6 +404,37 @@ struct ConversationDetailView: View {
     
     private func shouldShowTimestamp(for message: Message, at index: Int, in messages: [Message]) -> Bool {
         // Always show timestamp for the last message
+        if index == messages.count - 1 {
+            return true
+        }
+        
+        // Check if the next message is from a different user
+        let nextMessage = messages[index + 1]
+        if nextMessage.userId != message.userId {
+            return true
+        }
+        
+        // Check if the next message was sent more than 2 minutes later
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        
+        guard let currentDate = formatter.date(from: message.createdAt),
+              let nextDate = formatter.date(from: nextMessage.createdAt) else {
+            return true
+        }
+        
+        let timeDifference = nextDate.timeIntervalSince(currentDate)
+        return timeDifference > 120 // 2 minutes
+    }
+    
+    private func shouldShowProfilePicture(for message: Message, at index: Int, in messages: [Message]) -> Bool {
+        // Only show profile picture for non-sender messages
+        let isSender = message.isFromCurrentUser(currentUserId: authManager.currentUser?.id ?? -1)
+        if isSender {
+            return false
+        }
+        
+        // Always show profile picture for the last message
         if index == messages.count - 1 {
             return true
         }
