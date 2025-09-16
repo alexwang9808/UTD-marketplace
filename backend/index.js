@@ -217,13 +217,31 @@ app.get('/users/:userId/conversations', async (req, res) => {
     return res.status(400).json({ error: 'Invalid user ID' });
   }
   try {
-    // Get all messages where user is either sender or receiver (via listing owner)
-    const messages = await prisma.message.findMany({
+    // Step 1: Get all listings where the user has either sent messages or owns the listing
+    const userInteractions = await prisma.message.findMany({
       where: {
         OR: [
           { userId: parseInt(userId) }, // Messages user sent
           { listing: { userId: parseInt(userId) } } // Messages on user's listings
         ]
+      },
+      select: {
+        listingId: true,
+        userId: true,
+        listing: { select: { userId: true } }
+      },
+      distinct: ['listingId']
+    });
+
+    // Step 2: Get unique listing IDs where user has participated
+    const participatingListingIds = userInteractions.map(msg => msg.listingId);
+
+    // Step 3: Get ALL messages for these listings to capture complete conversations
+    const messages = await prisma.message.findMany({
+      where: {
+        listingId: {
+          in: participatingListingIds
+        }
       },
       include: {
         user: true,
@@ -245,8 +263,25 @@ app.get('/users/:userId/conversations', async (req, res) => {
       const listingOwnerId = message.listing.userId;
       const listingId = message.listingId;
       
-      // Determine the other user in the conversation
+      // Determine the other user in this conversation
       const otherUserId = senderId === currentUserId ? listingOwnerId : senderId;
+      
+      // Handle special case: listing owner replying to their own listing
+      if (otherUserId === currentUserId) {
+        // Find existing conversations for this listing and add this message to them
+        for (const [key, conversation] of conversationsMap.entries()) {
+          if (conversation.listingId === listingId) {
+            conversation.messages.push(message);
+            
+            // Update last message if this is more recent
+            if (new Date(message.createdAt) > new Date(conversation.lastMessage.createdAt)) {
+              conversation.lastMessage = message;
+            }
+          }
+        }
+        return;
+      }
+      
       const conversationKey = `${Math.min(currentUserId, otherUserId)}-${Math.max(currentUserId, otherUserId)}-${listingId}`;
       
       if (!conversationsMap.has(conversationKey)) {
