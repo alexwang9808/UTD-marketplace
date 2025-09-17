@@ -78,7 +78,7 @@ struct ProfileView: View {
                             showingMyListings = false
                         }) {
                             Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 18, weight: .medium))
                                 .foregroundColor(.black)
                         }
                         

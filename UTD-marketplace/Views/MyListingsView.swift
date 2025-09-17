@@ -15,13 +15,6 @@ struct MyListingsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Orange line right below navigation bar
-            Rectangle()
-                .fill(Color.orange)
-                .frame(height: 4)
-                .edgesIgnoringSafeArea(.horizontal)
-                .padding(.top, -10)
-            
             if myListings.isEmpty {
                     // Empty state
                     VStack(spacing: 20) {
@@ -46,7 +39,7 @@ struct MyListingsView: View {
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(.systemGroupedBackground))
+                    .background(Color(UIColor.systemBackground))
                 } else {
                     // Listings grid
                     ScrollView {
@@ -148,7 +141,7 @@ struct MyListingsView: View {
                         }
                         .padding()
                     }
-                    .background(Color(.systemGroupedBackground))
+                    .background(Color(UIColor.systemBackground))
                 }
             }
             .navigationTitle("My Listings")

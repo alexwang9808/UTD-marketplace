@@ -317,14 +317,14 @@ struct ListingsView: View {
                             image
                                 .resizable()
                                 .aspectRatio(1, contentMode: .fill)
-                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160)
                                 .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                         case .failure(_):
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.red.opacity(0.1))
                                 .aspectRatio(1, contentMode: .fill)
-                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160)
                                 .clipped()
                                 .overlay(
                                     VStack(spacing: 8) {
@@ -340,7 +340,7 @@ struct ListingsView: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.gray.opacity(0.1))
                                 .aspectRatio(1, contentMode: .fill)
-                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160)
                                 .clipped()
                                 .overlay(
                                     ProgressView()
@@ -350,7 +350,7 @@ struct ListingsView: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.gray.opacity(0.1))
                                 .aspectRatio(1, contentMode: .fill)
-                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 200)
+                                .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160)
                                 .clipped()
                         }
                     }
@@ -364,7 +364,7 @@ struct ListingsView: View {
                             )
                         )
                         .aspectRatio(1, contentMode: .fill)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 160)
                         .clipped()
                         .overlay(
                             VStack(spacing: 8) {
@@ -384,7 +384,8 @@ struct ListingsView: View {
                 Text(item.title)
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .foregroundColor(.primary)
 
                 // Price

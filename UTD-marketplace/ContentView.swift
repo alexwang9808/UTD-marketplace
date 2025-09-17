@@ -70,7 +70,7 @@ struct ContentView: View {
     private var customTabBar: some View {
         HStack(spacing: 0) {
             ForEach(tabs, id: \.id) { tab in
-                Button(action: {
+Button(action: {
                     withAnimation(.linear(duration: 0.1)) {
                         selectedTab = tab.id
                     }
@@ -87,8 +87,8 @@ struct ContentView: View {
                             .foregroundColor(selectedTab == tab.id ? .orange : .gray)
                             .fontWeight(selectedTab == tab.id ? .semibold : .regular)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -96,7 +96,6 @@ struct ContentView: View {
         .background(
             Rectangle()
                 .fill(Color(UIColor.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
         )
         .frame(height: 60)
     }
