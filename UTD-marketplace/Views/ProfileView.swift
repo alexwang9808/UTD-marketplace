@@ -97,6 +97,17 @@ struct ProfileView: View {
             .sheet(isPresented: $showingEditProfile) {
                 if let user = currentUser {
                     EditProfileView(user: user)
+                } else {
+                    // Show sign-in prompt with X button when not authenticated
+                    NavigationStack {
+                        Color(UIColor.systemBackground)
+                            .ignoresSafeArea()
+                            .navigationTitle("")
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .presentationDragIndicator(.hidden)
+                    .presentationDetents([.large])
+                    .presentationBackgroundInteraction(.disabled)
                 }
             }
             .onChange(of: showingEditProfile) { 
