@@ -1,0 +1,10 @@
+# Firebase config files (sensitive data)
+UTD-marketplace/GoogleService-Info.plist
+
+# Xcode
+*.xcuserstate
+xcuserdata/
+.DS_Store
+
+# Dependencies  
+node_modules/
