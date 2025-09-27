@@ -11,8 +11,14 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
+// Import Firebase service
+const { initializeFirebase, sendMessageNotification } = require('./services/firebaseService');
+
 const app = express();
 const prisma = new PrismaClient();
+
+// Initialize Firebase
+initializeFirebase();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -693,6 +699,16 @@ app.post('/messages', authenticateToken, upload.single('image'), async (req, res
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
     const finalMessageType = req.file ? 'image' : 'text';
     
+    // Get listing details and owner info for notification
+    const listing = await prisma.listing.findUnique({
+      where: { id: parseInt(listingId) },
+      include: { user: true }
+    });
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    
     const message = await prisma.message.create({
       data: {
         content: content || null,
@@ -705,7 +721,91 @@ app.post('/messages', authenticateToken, upload.single('image'), async (req, res
         user: true
       }
     });
+    
+    // Send push notification to the recipient
+    // Don't send notification to yourself
+    if (listing.userId !== req.user.userId && listing.user.fcmToken) {
+      try {
+        await sendMessageNotification(
+          listing.user.fcmToken,
+          message.user.name || message.user.email,
+          content || 'Sent an image',
+          listing.title,
+          {
+            senderId: req.user.userId,
+            listingId: listing.id,
+          }
+        );
+        console.log('Push notification sent to listing owner');
+      } catch (notificationError) {
+        console.error('Failed to send push notification:', notificationError);
+        // Don't fail the message creation if notification fails
+      }
+    }
+    
+    // Also send notification to other conversation participants who aren't the sender or listing owner
+    try {
+      const conversationMessages = await prisma.message.findMany({
+        where: { 
+          listingId: parseInt(listingId),
+          userId: { not: req.user.userId } // Exclude the current sender
+        },
+        include: { user: true },
+        distinct: ['userId'] // Get unique users
+      });
+      
+      for (const conversationMessage of conversationMessages) {
+        // Skip listing owner (already notified above) and users without FCM tokens
+        if (conversationMessage.userId !== listing.userId && conversationMessage.user.fcmToken) {
+          try {
+            await sendMessageNotification(
+              conversationMessage.user.fcmToken,
+              message.user.name || message.user.email,
+              content || 'Sent an image',
+              listing.title,
+              {
+                senderId: req.user.userId,
+                listingId: listing.id,
+              }
+            );
+            console.log(`Push notification sent to conversation participant: ${conversationMessage.user.email}`);
+          } catch (notificationError) {
+            console.error(`Failed to send push notification to ${conversationMessage.user.email}:`, notificationError);
+          }
+        }
+      }
+    } catch (conversationError) {
+      console.error('Error fetching conversation participants:', conversationError);
+    }
+    
     res.status(201).json(message);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user's FCM token for push notifications
+app.post('/users/:userId/fcm-token', authenticateToken, async (req, res) => {
+  const { userId } = req.params;
+  const { fcmToken } = req.body;
+  
+  // Ensure user can only update their own FCM token
+  if (parseInt(userId) !== req.user.userId) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  
+  if (!fcmToken) {
+    return res.status(400).json({ error: 'Missing FCM token' });
+  }
+  
+  try {
+    const user = await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: { fcmToken },
+      select: { id: true, email: true, name: true }
+    });
+    
+    res.json({ success: true, message: 'FCM token updated successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

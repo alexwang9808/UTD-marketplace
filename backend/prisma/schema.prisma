@@ -18,6 +18,7 @@ model User {
   verificationToken String?        @unique
   resetToken        String?        // Password reset token
   resetTokenExpiry  DateTime?      // Reset token expiration
+  fcmToken          String?        // Firebase Cloud Messaging token for push notifications
   createdAt         DateTime       @default(now())
   listings          Listing[]
   messages          Message[]

@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E8631CE92E874A5D00B15EA3 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = E8631CE82E874A5D00B15EA3 /* FirebaseAnalytics */; };
+		E8631CEB2E874A5D00B15EA3 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = E8631CEA2E874A5D00B15EA3 /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E883FD7F2DFA033D0081A8AE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8631CEB2E874A5D00B15EA3 /* FirebaseMessaging in Frameworks */,
+				E8631CE92E874A5D00B15EA3 /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +119,8 @@
 			);
 			name = "UTD-marketplace";
 			packageProductDependencies = (
+				E8631CE82E874A5D00B15EA3 /* FirebaseAnalytics */,
+				E8631CEA2E874A5D00B15EA3 /* FirebaseMessaging */,
 			);
 			productName = "UTD-marketplace";
 			productReference = E883FD712DFA033C0081A8AE /* UTD-marketplace.app */;
@@ -195,6 +204,9 @@
 			);
 			mainGroup = E883FD682DFA033C0081A8AE;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E8631CE72E874A5D00B15EA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E883FD722DFA033C0081A8AE /* Products */;
 			projectDirPath = "";
@@ -393,10 +405,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = "UTD-marketplace/UTD-marketplace.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -420,10 +435,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_ENTITLEMENTS = "UTD-marketplace/UTD-marketplace.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -550,6 +568,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E8631CE72E874A5D00B15EA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E8631CE82E874A5D00B15EA3 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E8631CE72E874A5D00B15EA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		E8631CEA2E874A5D00B15EA3 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E8631CE72E874A5D00B15EA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E883FD692DFA033C0081A8AE /* Project object */;
 }

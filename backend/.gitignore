@@ -1,5 +1,6 @@
 node_modules
-# Keep environment variables out of version control
 .env
+# Firebase service account (contains sensitive credentials)
+config/firebase-service-account.json
 
 /generated/prisma
