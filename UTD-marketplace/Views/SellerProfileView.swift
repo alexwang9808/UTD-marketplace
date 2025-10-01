@@ -77,6 +77,13 @@ struct SellerProfileView: View {
                                 .fontWeight(.bold)
                                 .foregroundColor(.primary)
                             
+                            // Statistics section
+                            Text("\(sellerListingsCount) active listing\(sellerListingsCount == 1 ? "" : "s")")
+                                .font(.body)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                                .padding(.top, 4)
+                            
                             // Bio section
                             if let bio = seller.bio, !bio.isEmpty {
                                 Text(bio)
@@ -95,7 +102,7 @@ struct SellerProfileView: View {
                     if !sellerListings.isEmpty {
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("\(sellerListingsCount) \(sellerListingsCount == 1 ? "listing" : "listings")")
+                                Text("Listings")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.primary)
@@ -152,34 +159,64 @@ struct SellerProfileView: View {
     @ViewBuilder
     private func sellerListingCard(listing: Listing, isPressed: Bool = false) -> some View {
         VStack(spacing: 0) {
-            // Image
-            if let imageUrl = listing.primaryImageUrl,
-               let url = URL(string: "http://localhost:3001\(imageUrl)") {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 120)
-                        .clipped()
-                } placeholder: {
-                    Rectangle()
+            // Image (matching ListingsView style)
+            Group {
+                if let imageUrl = listing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        case .failure(_):
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.red.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                                .overlay(
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                        Text("Failed to load")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.red)
+                                    }
+                                )
+                        case .empty:
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                                .overlay(
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                )
+                        @unknown default:
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                        }
+                    }
+                } else {
+                    RoundedRectangle(cornerRadius: 16)
                         .fill(Color.gray.opacity(0.3))
-                        .frame(height: 120)
+                        .aspectRatio(1, contentMode: .fill)
+                        .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                        .clipped()
                         .overlay(
                             Image(systemName: "photo")
-                                .font(.system(size: 24))
                                 .foregroundColor(.gray)
+                                .font(.system(size: 24))
                         )
                 }
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(height: 120)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .font(.system(size: 24))
-                            .foregroundColor(.gray)
-                    )
             }
             
             // Content

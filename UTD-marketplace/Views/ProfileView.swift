@@ -9,15 +9,23 @@ struct ProfileView: View {
     @State private var showingEditProfile = false
 
     @State private var showingAddListing = false
-    @State private var showingMyListings = false
     @State private var showingLogoutAlert = false
     @State private var showingSettingsDropdown = false
+    @State private var selectedListingToEdit: Listing?
+    @State private var timeSnapshot = Date()
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
         guard let currentUserId = authManager.currentUser?.id else { return 0 }
         return viewModel.listings.filter { $0.userId == currentUserId }.count
     }
+    
+    // Computed property to get current user's listings
+    private var myListings: [Listing] {
+        guard let currentUserId = authManager.currentUser?.id else { return [] }
+        return viewModel.listings.filter { $0.userId == currentUserId }
+    }
+    
     
     var body: some View {
         NavigationView {
@@ -40,15 +48,15 @@ struct ProfileView: View {
                     ScrollView {
                         VStack(spacing: 24) {
                             modernProfileHeader
-                            modernActionButtons
+                            myListingsSection
                         }
                         .padding(.top, 20)
                     }
                 }
             }
             .overlay(
-                // Floating settings button overlay
-                settingsButtonOverlay,
+                // Floating settings and add listing button overlay
+                topButtonsOverlay,
                 alignment: .topTrailing
             )
             .overlay(
@@ -63,6 +71,7 @@ struct ProfileView: View {
             }
             .onAppear {
                 fetchUserFromBackend()
+                timeSnapshot = Date() // Refresh time snapshot when view appears
             }
             .onChange(of: authManager.currentUser) {
                 fetchCurrentUser()
@@ -70,29 +79,8 @@ struct ProfileView: View {
             .sheet(isPresented: $showingAddListing) {
                 AddListingView()
             }
-            .sheet(isPresented: $showingMyListings) {
-                VStack(spacing: 0) {
-                    // Simple X button at the top
-                    HStack {
-                        Button(action: {
-                            showingMyListings = false
-                        }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.black)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color(UIColor.systemBackground))
-                    
-                    MyListingsView()
-                }
-                .presentationDragIndicator(.hidden)
-                .presentationDetents([.large])
-                .presentationBackgroundInteraction(.disabled)
+            .sheet(item: $selectedListingToEdit) { listing in
+                EditListingView(listing: listing)
             }
             .sheet(isPresented: $showingEditProfile) {
                 if let user = currentUser {
@@ -140,11 +128,18 @@ struct ProfileView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 
+                // Statistics section
+                Text("\(myListingsCount) active listing\(myListingsCount == 1 ? "" : "s")")
+                    .font(.body)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                    .padding(.top, 4)
+                
                 // Bio section
                 VStack(spacing: 8) {
                     if let bio = currentUser?.bio, !bio.isEmpty {
                         Text(bio)
-                            .font(.body)
+                            .font(.subheadline)
                             .foregroundColor(.gray)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
@@ -217,19 +212,23 @@ struct ProfileView: View {
         .animation(.easeInOut(duration: 0.2), value: isUpdatingProfile)
     }
     
-    // MARK: - Modern Action Buttons
-    private var modernActionButtons: some View {
-        VStack(spacing: 16) {
-            // Add Listing Button
-            modernActionButton(
-                icon: "plus.circle.fill",
-                title: "Add Listing",
-                subtitle: "Create a new listing",
-                color: .orange,
-                action: { showingAddListing = true }
-            )
+    // MARK: - My Listings Section
+    private var myListingsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !myListings.isEmpty {
+                Spacer()
+                
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
+                ], spacing: 16) {
+                    ForEach(myListings, id: \.id) { listing in
+                        myListingCard(listing: listing)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
         }
-        .padding(.horizontal, 16)
     }
     
     private func modernActionButton(
@@ -288,71 +287,135 @@ struct ProfileView: View {
         .buttonStyle(.plain)
     }
     
-    private var modernMyListingsButton: some View {
-        Button(action: {
-            showingMyListings = true
-        }) {
-            HStack(spacing: 16) {
-                // Icon with count
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.0, green: 0.4, blue: 0.2), Color(red: 0.0, green: 0.5, blue: 0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+    // MARK: - My Listing Card
+    @ViewBuilder
+    private func myListingCard(listing: Listing) -> some View {
+        VStack(spacing: 8) {
+            // Listing image (matching ListingsView style)
+            Group {
+                if let imageUrl = listing.imageUrls.first, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        case .failure(_):
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.red.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                                .overlay(
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                        Text("Failed to load")
+                                            .font(.system(size: 8))
+                                            .foregroundColor(.red)
+                                    }
+                                )
+                        case .empty:
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                                .overlay(
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                )
+                        @unknown default:
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.1))
+                                .aspectRatio(1, contentMode: .fill)
+                                .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                                .clipped()
+                        }
+                    }
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.3))
+                        .aspectRatio(1, contentMode: .fill)
+                        .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
+                        .clipped()
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                                .font(.title2)
                         )
-                        .frame(width: 50, height: 50)
-                    
-                    Image(systemName: "list.bullet.rectangle")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
                 }
+            }
+            
+            // Listing details with fixed height
+            VStack(alignment: .leading, spacing: 4) {
+                Text(listing.title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(height: 30) // Fixed height for title
                 
-                // Text content
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text("My Listings")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
-                        
-                        // Count badge
-                        Text("\(myListingsCount)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(red: 0.0, green: 0.4, blue: 0.2))
-                            )
+                Text("$\(listing.priceString)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                
+                // Time ago and Click count
+                HStack(spacing: 4) {
+                    // Time ago
+                    HStack(spacing: 2) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(.secondary)
+                        Text(listing.timeAgo(from: timeSnapshot))
+                            .font(.system(size: 8))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                     
-                    Text(myListingsCount == 0 ? "No listings yet" : "Manage your \(myListingsCount) listing\(myListingsCount == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Spacer()
+                    
+                    // Click count
+                    HStack(spacing: 2) {
+                        Image(systemName: "eye.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(.secondary)
+                        Text("\(listing.clickCount ?? 0)")
+                            .font(.system(size: 8))
+                            .foregroundColor(.secondary)
+                    }
                 }
-                
-                Spacer()
-                
-                // Arrow
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
             }
-            .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white)
-                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                    .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
-            )
+            .frame(height: 60) // Fixed height for details section
+            
+            // Manage button
+            Button(action: {
+                selectedListingToEdit = listing
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "pencil")
+                    Text("Manage")
+                }
+                .font(.system(size: 10))
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(Color.orange)
+                .cornerRadius(6)
+            }
         }
-        .buttonStyle(.plain)
+        .frame(height: 220) // Adjusted total card height for proper image display
+        .padding(8)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
     }
+    
     
     private func fetchCurrentUser() {
         // Use the authenticated user's information
@@ -508,19 +571,31 @@ struct ProfileView: View {
         }
     }
     
-    // MARK: - Settings Button Overlay
+    // MARK: - Top Buttons Overlay (Settings and Add Listing)
     @ViewBuilder
-    private var settingsButtonOverlay: some View {
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showingSettingsDropdown.toggle()
+    private var topButtonsOverlay: some View {
+        VStack(spacing: 12) {
+            // Settings button
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showingSettingsDropdown.toggle()
+                }
+            }) {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 25, weight: .medium))
+                    .foregroundColor(.gray)
+                    .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
+                    .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
             }
-        }) {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 25, weight: .medium))
-                .foregroundColor(.gray)
-                .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
-                .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
+            
+            // Add Listing button
+            Button(action: {
+                showingAddListing = true
+            }) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 25, weight: .medium))
+                    .foregroundColor(.orange)
+            }
         }
         .padding(.trailing, 16)
         .padding(.top, 8)
@@ -556,30 +631,6 @@ struct ProfileView: View {
                                 .foregroundColor(.green)
                                 .frame(width: 20)
                             Text("Edit profile")
-                                .font(.body)
-                                .fontWeight(.medium)
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
-                    
-                    Divider()
-                        .padding(.horizontal, 16)
-
-                    Button(action: {
-                        showingMyListings = true
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showingSettingsDropdown = false
-                        }
-                    }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "list.bullet.rectangle")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.orange)
-                                .frame(width: 20)
-                            Text("My Listings")
                                 .font(.body)
                                 .fontWeight(.medium)
                                 .foregroundColor(.primary)
@@ -647,7 +698,7 @@ struct ProfileView: View {
                 )
                 .frame(width: 180)
                 .padding(.trailing, 16)
-                .padding(.top, 45) // Position below the settings button
+                .padding(.top, 85) // Position below both settings and add listing buttons
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.8).combined(with: .opacity),
                     removal: .scale(scale: 0.9).combined(with: .opacity)

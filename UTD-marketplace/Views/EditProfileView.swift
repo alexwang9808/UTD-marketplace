@@ -180,7 +180,7 @@ struct EditProfileView: View {
                             .fill(Color.gray.opacity(0.1))
                     )
                 
-                Text("\(bio.count)/200")
+                Text("\(bio.count)/100")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -208,8 +208,8 @@ struct EditProfileView: View {
         
         isUpdating = true
         
-        // Limit bio to 200 characters
-        let trimmedBio = String(bio.prefix(200))
+        // Limit bio to 100 characters
+        let trimmedBio = String(bio.prefix(100))
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Create multipart form data
