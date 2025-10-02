@@ -56,36 +56,14 @@ struct AddListingView: View {
                     
                     VStack(spacing: 30) {
                         Spacer()
-                        
-                        VStack(spacing: 20) {
-                            ZStack {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [.orange, .orange.opacity(0.8)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 80, height: 80)
-                                
-                                Image(systemName: "plus.circle")
-                                    .font(.system(size: 40, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
-                            
                             VStack(spacing: 8) {
                                 Text("Login Required")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.primary)
-                                
-                                Text("You need to be logged in to create a listing")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
+                            
                             }
-                        }
+   
                         
                         Button(action: {
                             showingAuthentication = true

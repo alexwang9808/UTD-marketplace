@@ -34,41 +34,73 @@ struct ProfileView: View {
                 Color(UIColor.systemBackground)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    // Modern orange accent bar
-                    LinearGradient(
-                        colors: [Color.orange, Color.orange.opacity(0.8)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(height: 4)
-                    .edgesIgnoringSafeArea(.horizontal)
-                    .padding(.top, -10)
-                    
-                    ScrollView {
-                        VStack(spacing: 24) {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Title and orange bar that scroll with content
+                        VStack(spacing: 0) {
+                            // Title
+                            TitleView(title: "Profile")
+                                .padding(.top, 10)
+                            
+                            // Orange bar
+                            LinearGradient(
+                                colors: [Color.orange, Color.orange.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(height: 4)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 20)
+                            
+                            // Settings and Add Listing buttons below orange bar
+                            HStack {
+                                Spacer()
+                                
+                                VStack(spacing: 12) {
+                                    // Settings button
+                                    Button(action: {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            showingSettingsDropdown.toggle()
+                                        }
+                                    }) {
+                                        Image(systemName: "gearshape.fill")
+                                            .font(.system(size: 25, weight: .medium))
+                                            .foregroundColor(.gray)
+                                            .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
+                                            .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
+                                    }
+                                    
+                                    // Add Listing button
+                                    Button(action: {
+                                        showingAddListing = true
+                                    }) {
+                                        Image(systemName: "plus.circle.fill")
+                                            .font(.system(size: 25, weight: .medium))
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 15)
+                        }
+                        
+                        VStack(spacing: 60) {
                             modernProfileHeader
                             myListingsSection
+                            
+                            // Spacer to push content up so cards almost touch nav bar
+                            Spacer(minLength: 100)
                         }
                         .padding(.top, 20)
+                        .padding(.bottom, 20)
                     }
                 }
             }
-            .overlay(
-                // Floating settings and add listing button overlay
-                topButtonsOverlay,
-                alignment: .topTrailing
-            )
             .overlay(
                 // Settings dropdown overlay
                 settingsDropdownOverlay,
                 alignment: .topTrailing
             )
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    TitleView(title: "Profile")
-                }
-            }
             .onAppear {
                 fetchUserFromBackend()
                 timeSnapshot = Date() // Refresh time snapshot when view appears
@@ -223,7 +255,12 @@ struct ProfileView: View {
                     GridItem(.flexible(), spacing: 12)
                 ], spacing: 16) {
                     ForEach(myListings, id: \.id) { listing in
-                        myListingCard(listing: listing)
+                        NavigationLink {
+                            ListingDetailView(listing: listing)
+                        } label: {
+                            myListingCard(listing: listing)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -571,35 +608,6 @@ struct ProfileView: View {
         }
     }
     
-    // MARK: - Top Buttons Overlay (Settings and Add Listing)
-    @ViewBuilder
-    private var topButtonsOverlay: some View {
-        VStack(spacing: 12) {
-            // Settings button
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showingSettingsDropdown.toggle()
-                }
-            }) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 25, weight: .medium))
-                    .foregroundColor(.gray)
-                    .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
-                    .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
-            }
-            
-            // Add Listing button
-            Button(action: {
-                showingAddListing = true
-            }) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 25, weight: .medium))
-                    .foregroundColor(.orange)
-            }
-        }
-        .padding(.trailing, 16)
-        .padding(.top, 8)
-    }
     
     // MARK: - Settings Dropdown Overlay
     @ViewBuilder
@@ -698,7 +706,7 @@ struct ProfileView: View {
                 )
                 .frame(width: 180)
                 .padding(.trailing, 16)
-                .padding(.top, 85) // Position below both settings and add listing buttons
+                .padding(.top, 85) // Position below the buttons that are now below orange bar
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.8).combined(with: .opacity),
                     removal: .scale(scale: 0.9).combined(with: .opacity)

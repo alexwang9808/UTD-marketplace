@@ -67,31 +67,14 @@ struct ListingsView: View {
                         viewModel.fetchListings()
                     }
                 
-                VStack(spacing: 0) {
-                    // Modern orange accent bar
-                    LinearGradient(
-                        colors: [Color.orange, Color.orange.opacity(0.8)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(height: 4)
-                    .edgesIgnoringSafeArea(.horizontal)
-                    .padding(.top, -10)
-                    
-                    // Listings content
-                    modernListingsContent
-                }
+                // Listings content with header
+                modernListingsContentWithHeader
             }
             .overlay(
                 // Floating sort dropdown overlay
                 sortDropdownOverlay,
                 alignment: .topTrailing
             )
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    TitleView(title: "Listings")
-                }
-            }
 
         }
     }
@@ -236,10 +219,25 @@ struct ListingsView: View {
         .padding(.vertical, 12)
     }
     
-    // MARK: - Modern Listings Content
-    private var modernListingsContent: some View {
+    // MARK: - Modern Listings Content with Header
+    private var modernListingsContentWithHeader: some View {
         ScrollView {
             VStack(spacing: 0) {
+                // Title and orange bar that scroll with content
+                VStack(spacing: 0) {
+                    TitleView(title: "Listings")
+                        .padding(.top, 10)
+                    
+                    LinearGradient(
+                        colors: [Color.orange, Color.orange.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(height: 4)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 20)
+                }
+                
                 // Modern Search and Sort toolbar
                 modernToolbar
                 

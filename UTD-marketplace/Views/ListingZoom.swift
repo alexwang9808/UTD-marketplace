@@ -292,9 +292,6 @@ struct ListingDetailView: View {
                                             .font(.headline)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.green)
-                                        Text("Check your Messages tab to continue the conversation.")
-                                            .font(.caption)
-                                            .foregroundColor(.green)
                                     }
                                     Spacer()
                                 }
