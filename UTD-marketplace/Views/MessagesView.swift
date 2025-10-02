@@ -195,41 +195,10 @@ struct MessagesView: View {
         VStack(spacing: 24) {
             Spacer()
             
-            // Fun illustration for anonymous users
-            ZStack {
-                Circle()
-                    .fill(LinearGradient(colors: [.orange.opacity(0.2), .red.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 120, height: 120)
-                    .offset(x: -15, y: -15)
-                
-                Image(systemName: "lock.circle.fill")
-                    .font(.system(size: 70))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.orange, .red],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
-            
             VStack(spacing: 12) {
                 Text("Sign in to view messages")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.primary, .orange],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                
-                Text("Send a message on a listing to start a conversation!")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
             }
             
             Button(action: {
