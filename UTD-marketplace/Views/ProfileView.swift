@@ -51,47 +51,93 @@ struct ProfileView: View {
                             .frame(height: 4)
                             .padding(.horizontal, 16)
                             .padding(.top, 20)
-                            
-                            // Settings and Add Listing buttons below orange bar
-                            HStack {
-                                Spacer()
-                                
-                                VStack(spacing: 12) {
-                                    // Settings button
-                                    Button(action: {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            showingSettingsDropdown.toggle()
-                                        }
-                                    }) {
-                                        Image(systemName: "gearshape.fill")
-                                            .font(.system(size: 25, weight: .medium))
-                                            .foregroundColor(.gray)
-                                            .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
-                                            .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
-                                    }
+                            .padding(.bottom, 30)
+                        }
+                        
+                        VStack(spacing: 30) {
+                            // Profile header with buttons on the right
+                            ZStack {
+                                // Centered profile content
+                                VStack(spacing: 20) {
+                                    // Profile picture
+                                    modernProfilePicture
                                     
-                                    // Add Listing button
-                                    Button(action: {
-                                        showingAddListing = true
-                                    }) {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.system(size: 25, weight: .medium))
-                                            .foregroundColor(.orange)
+                                    // Profile info
+                                    VStack(spacing: 12) {
+                                        Text(currentUser?.name ?? "Unknown User")
+                                            .font(.title2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.primary)
+                                        
+                                        // Statistics section
+                                        Text("\(myListingsCount) active listing\(myListingsCount == 1 ? "" : "s")")
+                                            .font(.body)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.primary)
+                                            .padding(.top, 4)
+                                        
+                                        // Bio section
+                                        VStack(spacing: 8) {
+                                            if let bio = currentUser?.bio, !bio.isEmpty {
+                                                Text(bio)
+                                                    .font(.body)
+                                                    .foregroundColor(.gray)
+                                                    .fontWeight(.bold)
+                                                    .multilineTextAlignment(.center)
+                                                    .lineLimit(3)
+                                                    
+                                            } 
+                                        }
+                                        
+                                        if isUpdatingProfile {
+                                            HStack(spacing: 8) {
+                                                ProgressView()
+                                                    .scaleEffect(0.8)
+                                                Text("Updating profile...")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
                                     }
+                                }
+                                
+                                // Buttons positioned on the right
+                                HStack {
+                                    Spacer()
+                                    
+                                    VStack(spacing: 12) {
+                                        // Settings button on top
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                showingSettingsDropdown.toggle()
+                                            }
+                                        }) {
+                                            Image(systemName: "gearshape.fill")
+                                                .font(.system(size: 25, weight: .medium))
+                                                .foregroundColor(.gray)
+                                                .rotationEffect(.degrees(showingSettingsDropdown ? 45 : 0))
+                                                .animation(.easeInOut(duration: 0.2), value: showingSettingsDropdown)
+                                        }
+                                        
+                                        // Add Listing button below settings
+                                        Button(action: {
+                                            showingAddListing = true
+                                        }) {
+                                            Image(systemName: "plus.circle.fill")
+                                                .font(.system(size: 25, weight: .medium))
+                                                .foregroundColor(.orange)
+                                        }
+                                    }
+                                    .padding(.top, -100) // Align horizontally with profile picture
                                 }
                             }
                             .padding(.horizontal, 16)
-                            .padding(.top, 15)
-                        }
-                        
-                        VStack(spacing: 60) {
-                            modernProfileHeader
+                            
                             myListingsSection
                             
                             // Spacer to push content up so cards almost touch nav bar
                             Spacer(minLength: 100)
                         }
-                        .padding(.top, 20)
                         .padding(.bottom, 20)
                     }
                 }

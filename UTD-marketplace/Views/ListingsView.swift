@@ -120,7 +120,7 @@ struct ListingsView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
                         .font(.body)
-                    TextField("Search listings...", text: $searchText, onEditingChanged: { editing in
+                    TextField("Search listings", text: $searchText, onEditingChanged: { editing in
                         if !editing {
                             isSearching = false
                             timeSnapshot = Date() // Refresh time when search editing ends
@@ -146,7 +146,8 @@ struct ListingsView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 20)
                         .fill(Color.white)
-                        .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 2)
+                        .stroke(Color.orange.opacity(0.6), lineWidth: 2)
+
                 )
             } else {
                 // Modern search button
@@ -172,9 +173,8 @@ struct ListingsView: View {
                             .fill(Color.white)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                                    .stroke(Color.orange.opacity(0.6), lineWidth: 2)
                             )
-                            .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
                     )
                 }
             }
@@ -209,9 +209,8 @@ struct ListingsView: View {
                         .fill(Color.white)
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.orange.opacity(0.6), lineWidth: 2)
                         )
-                        .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
                 )
             }
         }
