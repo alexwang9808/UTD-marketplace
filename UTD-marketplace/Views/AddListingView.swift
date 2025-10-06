@@ -102,11 +102,23 @@ struct AddListingView: View {
             AuthenticationView()
         }
         .task(id: photoItems) {
-            imageDataArray.removeAll()
-            for item in photoItems {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    imageDataArray.append(data)
+            // Only load new items that aren't already in imageDataArray
+            let currentCount = imageDataArray.count
+            let newItemsCount = photoItems.count
+            
+            if newItemsCount > currentCount {
+                // Load only the new items
+                for i in currentCount..<newItemsCount {
+                    if let data = try? await photoItems[i].loadTransferable(type: Data.self) {
+                        imageDataArray.append(data)
+                    }
                 }
+            } else if newItemsCount < currentCount {
+                // This case is handled by manual removal in the button action
+                // No need to do anything here
+            } else if newItemsCount == 0 {
+                // Clear all if no items
+                imageDataArray.removeAll()
             }
         }
     }
@@ -259,12 +271,12 @@ struct AddListingView: View {
                                             .resizable()
                                             .scaledToFill()
                                             .frame(width: 100, height: 100)
-                                            .clipped()
                                             .clipShape(RoundedRectangle(cornerRadius: 12))
                                         
                                         Button(action: {
+                                            // Remove from both arrays simultaneously to avoid rebuild
                                             imageDataArray.remove(at: index)
-                                            photoItems.remove(at: index)
+                                            let _ = photoItems.remove(at: index)
                                         }) {
                                             Image(systemName: "xmark.circle.fill")
                                                 .font(.system(size: 20))
@@ -275,8 +287,10 @@ struct AddListingView: View {
                                                         .frame(width: 24, height: 24)
                                                 )
                                         }
-                                        .offset(x: 8, y: -8)
+                                        .offset(x: 6, y: -6)
                                     }
+                                    .frame(width: 112, height: 112) // Extra space for button
+                                    .clipped()
                                 }
                             }
                         }
@@ -286,12 +300,12 @@ struct AddListingView: View {
             }
         }
         .padding(20)
-        .background(
+        .background {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
                 .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
-        )
+        }
     }
     
     // MARK: - Modern Details Section
@@ -497,6 +511,7 @@ struct CustomLocationDropdown: View {
     let locations: [String]
     @Binding var currentSelection: String
     @Binding var isPresented: Bool
+    @State private var pressedLocation: String? = nil
     
     var body: some View {
         VStack(spacing: 8) {
@@ -538,41 +553,40 @@ struct CustomLocationDropdown: View {
     }
     
     private func locationOptionRow(location: String) -> some View {
-        Button(action: {
+        let isSelected = currentSelection == location
+        let isPressed = pressedLocation == location
+        let shouldHighlight = isSelected || isPressed
+        
+        return HStack(spacing: 12) {
+            Text(location)
+                .font(.body)
+                .fontWeight(.medium)
+                .foregroundColor(
+                    shouldHighlight ? .orange : .primary
+                )
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    shouldHighlight
+                        ? Color.orange.opacity(0.08)
+                        : Color.clear
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
             currentSelection = location
             withAnimation(.easeInOut(duration: 0.2)) {
                 isPresented = false
             }
-        }) {
-            HStack(spacing: 12) {
-                Text(location)
-                    .font(.body)
-                    .fontWeight(.medium)
-                    .foregroundColor(
-                        currentSelection == location ? .orange : .primary
-                    )
-                
-                Spacer()
-                
-                if currentSelection == location {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.orange)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        currentSelection == location
-                            ? Color.orange.opacity(0.08)
-                            : Color.clear
-                    )
-            )
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            pressedLocation = pressing ? location : nil
+        }, perform: {})
     }
 
 }
