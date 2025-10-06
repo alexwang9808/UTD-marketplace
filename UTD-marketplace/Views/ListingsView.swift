@@ -233,7 +233,6 @@ struct ListingsView: View {
                         endPoint: .trailing
                     )
                     .frame(height: 4)
-                    .padding(.horizontal, 16)
                     .padding(.top, 20)
                 }
                 

@@ -64,7 +64,6 @@ struct MessagesView: View {
                         endPoint: .trailing
                     )
                     .frame(height: 4)
-                    .padding(.horizontal, 16)
                     .padding(.top, 20)
                 }
                 
@@ -107,7 +106,6 @@ struct MessagesView: View {
                         endPoint: .trailing
                     )
                     .frame(height: 4)
-                    .padding(.horizontal, 16)
                     .padding(.top, 20)
                 }
                 
@@ -252,7 +250,6 @@ struct MessagesView: View {
                         endPoint: .trailing
                     )
                     .frame(height: 4)
-                    .padding(.horizontal, 16)
                     .padding(.top, 20)
                 }
                 

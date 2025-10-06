@@ -120,14 +120,14 @@ struct EditListingView: View {
                     }) {
                         HStack {
                             Image(systemName: "trash")
-                            Text("Delete Listing")
+                            Text("Delete")
                         }
                         .foregroundColor(.red)
                     }
                     .disabled(isDeleting)
                 }
             }
-            .navigationTitle("Manage Listing")
+            .navigationTitle("Manage")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -149,13 +149,13 @@ struct EditListingView: View {
                     )
                 }
             }
-            .alert("Delete Listing", isPresented: $showDeleteAlert) {
+            .alert("Delete", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
                     deleteListing()
                 }
             } message: {
-                Text("Are you sure you want to delete this listing? This action cannot be undone.")
+                Text("Are you sure you want to delete this listing?")
             }
         }
     }

@@ -9,6 +9,7 @@ struct AddListingView: View {
     @State private var title       = ""
     @State private var location    = "University Village"
     @State private var price       = ""
+    @State private var priceDisplay = ""
     @State private var description = ""
     @State private var photoItems: [PhotosPickerItem] = []
     @State private var imageDataArray: [Data] = []
@@ -303,8 +304,8 @@ struct AddListingView: View {
         .background {
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+                .stroke(Color.orange, lineWidth: 2)
+             
         }
     }
     
@@ -363,8 +364,8 @@ struct AddListingView: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+                .stroke(Color.orange, lineWidth: 2)
+         
         )
     }
     
