@@ -25,6 +25,7 @@ struct UTD_marketplaceApp: App {
                 .environmentObject(authManager)
                 .environmentObject(listingViewModel)
                 .environmentObject(firebaseManager)
+                .preferredColorScheme(.light) // Force light mode
                 .onAppear {
                     // Set auth manager reference after state objects are created
                     firebaseManager.authManager = authManager

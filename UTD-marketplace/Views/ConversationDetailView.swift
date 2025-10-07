@@ -124,7 +124,7 @@ struct ConversationDetailView: View {
             NavigationLink {
                 ListingDetailView(listing: displayListing)
             } label: {
-                if let imageUrl = displayListing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                if let imageUrl = displayListing.primaryImageUrl, let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                     AsyncImage(url: url) { image in
                         image
                             .resizable()
@@ -234,7 +234,7 @@ struct ConversationDetailView: View {
     @ViewBuilder
     private var otherUserProfilePicture: some View {
         if let imageUrl = displayOtherUser.imageUrl,
-           let url = URL(string: "http://localhost:3001\(imageUrl)") {
+           let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
             AsyncImage(url: url) { image in
                 image
                     .resizable()
@@ -486,7 +486,7 @@ struct ConversationDetailView: View {
     private func modernImageMessage(message: Message, isSender: Bool) -> some View {
         Group {
             if let imageUrl = message.imageUrl,
-               let url = URL(string: "http://localhost:3001\(imageUrl)") {
+               let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()

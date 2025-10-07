@@ -34,9 +34,22 @@
 		E883FD882DFA033D0081A8AE /* UTD-marketplaceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "UTD-marketplaceUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E89363D12E94CECA00EF3A89 /* Exceptions for "UTD-marketplace" folder in "UTD-marketplace" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E883FD702DFA033C0081A8AE /* UTD-marketplace */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E883FD732DFA033C0081A8AE /* UTD-marketplace */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E89363D12E94CECA00EF3A89 /* Exceptions for "UTD-marketplace" folder in "UTD-marketplace" target */,
+			);
 			path = "UTD-marketplace";
 			sourceTree = "<group>";
 		};
@@ -411,8 +424,11 @@
 				CODE_SIGN_ENTITLEMENTS = "UTD-marketplace/UTD-marketplace.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V8478AAN47;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "UTD-marketplace/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "UTD Market";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -441,8 +457,11 @@
 				CODE_SIGN_ENTITLEMENTS = "UTD-marketplace/UTD-marketplace.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V8478AAN47;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "UTD-marketplace/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "UTD Market";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

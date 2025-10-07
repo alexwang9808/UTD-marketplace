@@ -248,7 +248,7 @@ struct ProfileView: View {
                     .scaledToFill()
             } else if let user = currentUser, 
                       let imageUrl = user.imageUrl,
-                      let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                      let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
@@ -375,7 +375,7 @@ struct ProfileView: View {
         VStack(spacing: 8) {
             // Listing image (matching ListingsView style)
             Group {
-                if let imageUrl = listing.imageUrls.first, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                if let imageUrl = listing.imageUrls.first, let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
@@ -523,7 +523,7 @@ struct ProfileView: View {
             return
         }
         
-        let url = URL(string: "http://localhost:3001/users/\(userId)")!
+        let url = URL(string: "\(AppConfig.baseURL)/users/\(userId)")!
         var request = URLRequest(url: url)
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         
@@ -558,7 +558,7 @@ struct ProfileView: View {
         isUpdatingProfile = true
         
         guard let currentUserId = authManager.currentUser?.id,
-              let url = URL(string: "http://localhost:3001/users/\(currentUserId)") else {
+              let url = URL(string: "\(AppConfig.baseURL)/users/\(currentUserId)") else {
             isUpdatingProfile = false
             return
         }

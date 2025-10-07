@@ -306,7 +306,7 @@ struct ListingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Modern image with enhanced styling
             Group {
-                if let imageUrl = item.imageUrls.first, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                if let imageUrl = item.imageUrls.first, let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
@@ -394,7 +394,7 @@ struct ListingsView: View {
                     Group {
                         if let user = item.user,
                            let imageUrl = user.imageUrl,
-                           let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                           let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                             AsyncImage(url: url) { image in
                                 image
                                     .resizable()

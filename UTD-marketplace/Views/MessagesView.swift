@@ -149,7 +149,7 @@ struct MessagesView: View {
     private func modernConversationCard(conversation: Conversation, isPressed: Bool = false) -> some View {
         return HStack(spacing: 16) {
             // Listing image
-            if let imageUrl = conversation.listing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+            if let imageUrl = conversation.listing.primaryImageUrl, let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()

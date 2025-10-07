@@ -41,7 +41,7 @@ struct SellerProfileView: View {
                         // Profile picture
                         Group {
                             if let imageUrl = seller.imageUrl,
-                               let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                               let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                                 AsyncImage(url: url) { image in
                                     image
                                         .resizable()
@@ -161,7 +161,7 @@ struct SellerProfileView: View {
         VStack(spacing: 0) {
             // Image (matching ListingsView style)
             Group {
-                if let imageUrl = listing.primaryImageUrl, let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                if let imageUrl = listing.primaryImageUrl, let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):

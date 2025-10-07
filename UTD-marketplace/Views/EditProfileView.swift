@@ -95,7 +95,7 @@ struct EditProfileView: View {
                             .frame(width: 120, height: 120)
                             .clipShape(Circle())
                     } else if let imageUrl = user.imageUrl,
-                              let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                              let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                         AsyncImage(url: url) { image in
                             image
                                 .resizable()
@@ -213,7 +213,7 @@ struct EditProfileView: View {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Create multipart form data
-        let url = URL(string: "http://localhost:3001/users/\(userId)")!
+        let url = URL(string: "\(AppConfig.baseURL)/users/\(userId)")!
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         

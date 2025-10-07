@@ -34,7 +34,7 @@ struct ListingDetailView: View {
                         if !currentListing.imageUrls.isEmpty {
                             TabView {
                                 ForEach(Array(currentListing.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
-                                    if let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                    if let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                                         AsyncImage(url: url) { phase in
                                             switch phase {
                                             case .success(let image):
@@ -120,7 +120,7 @@ struct ListingDetailView: View {
                                     // Seller profile picture
                                     Group {
                                         if let imageUrl = user.imageUrl,
-                                           let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                           let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                                             AsyncImage(url: url) { image in
                                                 image
                                                     .resizable()

@@ -50,7 +50,7 @@ struct EditListingView: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
                                 ForEach(Array(listing.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
-                                    if let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                    if let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                                         AsyncImage(url: url) { image in
                                             image
                                                 .resizable()

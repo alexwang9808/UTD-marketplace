@@ -10,7 +10,7 @@ final class ListingViewModel: ObservableObject {
     /// Fetches conversations for the specified user
     func fetchConversations(for userId: Int? = nil) {
         guard let userId = userId,
-              let url = URL(string: "http://localhost:3001/users/\(userId)/conversations") else {
+              let url = URL(string: "\(AppConfig.baseURL)/users/\(userId)/conversations") else {
             print("Invalid URL for fetching conversations")
             return
         }
@@ -53,7 +53,7 @@ final class ListingViewModel: ObservableObject {
 
     /// Fetches messages for a specific listing from the backend
     func fetchMessages(for listingId: Int) {
-        guard let url = URL(string: "http://localhost:3001/listings/\(listingId)/messages") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/listings/\(listingId)/messages") else {
             print("Invalid URL for fetching messages")
             return
         }
@@ -90,7 +90,7 @@ final class ListingViewModel: ObservableObject {
 
     /// Sends a new message to the backend
     func sendMessage(to listingId: Int, content: String, authToken: String?, userId: Int? = nil, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://localhost:3001/messages") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/messages") else {
             print("Invalid URL for sending message")
             completion(false)
             return
@@ -152,7 +152,7 @@ final class ListingViewModel: ObservableObject {
 
     /// Sends an image message to the backend
     func sendImageMessage(to listingId: Int, imageData: Data, authToken: String?, userId: Int? = nil, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://localhost:3001/messages") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/messages") else {
             print("Invalid URL for sending image message")
             completion(false)
             return
@@ -232,7 +232,7 @@ final class ListingViewModel: ObservableObject {
     }
 
     func addListing(title: String, price: String, description: String, location: String, imageDataArray: [Data], authToken: String?, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://localhost:3001/listings") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/listings") else {
             print("Invalid URL")
             completion(false)
             return
@@ -318,7 +318,7 @@ final class ListingViewModel: ObservableObject {
     }
     
     func updateListing(id: Int, title: String, price: String, description: String, location: String, imageDataArray: [Data]?, authToken: String?, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://localhost:3001/listings/\(id)") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/listings/\(id)") else {
             print("Invalid URL for updating listing")
             completion(false)
             return
@@ -406,7 +406,7 @@ final class ListingViewModel: ObservableObject {
     }
     
     func deleteListing(id: Int, authToken: String?, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://localhost:3001/listings/\(id)") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/listings/\(id)") else {
             print("Invalid URL for deleting listing")
             completion(false)
             return
@@ -450,7 +450,7 @@ final class ListingViewModel: ObservableObject {
     }
     
     func fetchListings() {
-        guard let url = URL(string: "http://localhost:3001/listings") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/listings") else {
             print("Invalid URL for fetching listings")
             return
         }
@@ -486,7 +486,7 @@ final class ListingViewModel: ObservableObject {
     }
     
     func trackClick(for listingId: Int, authToken: String?, completion: @escaping (Bool, Int?) -> Void) {
-        guard let url = URL(string: "http://localhost:3001/listings/\(listingId)/click") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/listings/\(listingId)/click") else {
             print("Invalid URL for tracking click")
             completion(false, nil)
             return

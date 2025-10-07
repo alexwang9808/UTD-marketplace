@@ -20,7 +20,14 @@ struct LoginView: View {
                         .fontWeight(.medium)
                     
                     TextField("Enter your UTD email", text: $email)
-                        .textFieldStyle(.roundedBorder)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
                         .autocorrectionDisabled()
@@ -33,7 +40,14 @@ struct LoginView: View {
                         .fontWeight(.medium)
                     
                     SecureField("Enter your password", text: $password)
-                        .textFieldStyle(.roundedBorder)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                         .textContentType(.none)
                 }
             }
@@ -91,7 +105,7 @@ struct LoginView: View {
         errorMessage = ""
         
         // Create login request
-        guard let url = URL(string: "http://localhost:3001/auth/login") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/auth/login") else {
             errorMessage = "Invalid server URL"
             isLoading = false
             return

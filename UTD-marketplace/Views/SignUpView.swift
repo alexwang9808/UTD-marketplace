@@ -8,6 +8,8 @@ struct SignUpView: View {
     @State private var isLoading = false
     @State private var errorMessage = ""
     @State private var showingSuccess = false
+    @State private var showPassword = false
+    @State private var showConfirmPassword = false
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -21,7 +23,14 @@ struct SignUpView: View {
                         .fontWeight(.medium)
                     
                     TextField("Enter your username", text: $name)
-                        .textFieldStyle(.roundedBorder)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                         .textInputAutocapitalization(.words)
                 }
                 
@@ -32,7 +41,14 @@ struct SignUpView: View {
                         .fontWeight(.medium)
                     
                     TextField("utdallas.edu email", text: $email)
-                        .textFieldStyle(.roundedBorder)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 12)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -43,9 +59,33 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    SecureField("Create a password", text: $password)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(.none)
+                    HStack {
+                        Group {
+                            if showPassword {
+                                TextField("Create a password", text: $password)
+                                    .textContentType(.none)
+                            } else {
+                                SecureField("Create a password", text: $password)
+                                    .textContentType(.none)
+                            }
+                        }
+                        .animation(nil, value: showPassword)
+                        
+                        Button(action: {
+                            showPassword.toggle()
+                        }) {
+                            Image(systemName: showPassword ? "eye.slash" : "eye")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
                 }
                 
                 // Confirm Password Field
@@ -54,9 +94,33 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    SecureField("Confirm your password", text: $confirmPassword)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(.none)
+                    HStack {
+                        Group {
+                            if showConfirmPassword {
+                                TextField("Confirm your password", text: $confirmPassword)
+                                    .textContentType(.none)
+                            } else {
+                                SecureField("Confirm your password", text: $confirmPassword)
+                                    .textContentType(.none)
+                            }
+                        }
+                        .animation(nil, value: showConfirmPassword)
+                        
+                        Button(action: {
+                            showConfirmPassword.toggle()
+                        }) {
+                            Image(systemName: showConfirmPassword ? "eye.slash" : "eye")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
                 }
             }
             .padding(.horizontal)
@@ -131,7 +195,7 @@ struct SignUpView: View {
         isLoading = true
         errorMessage = ""
         
-        guard let url = URL(string: "http://localhost:3001/auth/signup") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/auth/signup") else {
             errorMessage = "Invalid server URL"
             isLoading = false
             return

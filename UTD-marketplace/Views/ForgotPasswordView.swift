@@ -119,7 +119,7 @@ struct ForgotPasswordView: View {
         message = ""
         showingSuccess = false
         
-        guard let url = URL(string: "http://localhost:3001/auth/forgot-password") else {
+        guard let url = URL(string: "\(AppConfig.baseURL)/auth/forgot-password") else {
             message = "Invalid server URL"
             isLoading = false
             return

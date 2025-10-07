@@ -61,7 +61,7 @@ class FirebaseManager: NSObject, ObservableObject {
         // Get current user ID from AuthenticationManager
         guard let authManager = authManager,
               let currentUser = authManager.currentUser,
-              let url = URL(string: "http://localhost:3001/users/\(currentUser.id)/fcm-token") else {
+              let url = URL(string: "\(AppConfig.baseURL)/users/\(currentUser.id)/fcm-token") else {
             print("Cannot update FCM token: No authenticated user or invalid URL")
             return
         }

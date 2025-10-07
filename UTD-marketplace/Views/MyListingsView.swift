@@ -52,7 +52,7 @@ struct MyListingsView: View {
                                     // Listing image
                                     Group {
                                         if let imageUrl = listing.imageUrls.first,
-                                           let url = URL(string: "http://localhost:3001\(imageUrl)") {
+                                           let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
                                             AsyncImage(url: url) { image in
                                                 image
                                                     .resizable()
