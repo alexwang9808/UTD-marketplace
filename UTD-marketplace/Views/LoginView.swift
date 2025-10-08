@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct LoginView: View {
+struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isLoading = false
@@ -11,7 +11,7 @@ struct LoginView: View {
     
     var body: some View {
         VStack(spacing: 24) {
-            // Login Form
+            // Sign In Form
             VStack(spacing: 16) {
                 // Email Field
                 VStack(alignment: .leading, spacing: 8) {
@@ -20,8 +20,8 @@ struct LoginView: View {
                         .fontWeight(.medium)
                     
                     TextField("Enter your UTD email", text: $email)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16)
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                         .overlay(
@@ -40,8 +40,8 @@ struct LoginView: View {
                         .fontWeight(.medium)
                     
                     SecureField("Enter your password", text: $password)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16)
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                         .overlay(
@@ -61,15 +61,15 @@ struct LoginView: View {
                     .padding(.horizontal)
             }
             
-            // Login Button
-            Button(action: login) {
+            // Sign In Button
+            Button(action: signIn) {
                 HStack {
                     if isLoading {
                         ProgressView()
                             .scaleEffect(0.8)
                             .tint(.white)
                     } else {
-                        Text("Login")
+                        Text("Sign In")
                             .fontWeight(.semibold)
                     }
                 }
@@ -98,13 +98,13 @@ struct LoginView: View {
         !email.isEmpty && !password.isEmpty && email.contains("@")
     }
     
-    private func login() {
+    private func signIn() {
         guard isFormValid else { return }
         
         isLoading = true
         errorMessage = ""
         
-        // Create login request
+        // Create sign in request
         guard let url = URL(string: "\(AppConfig.baseURL)/auth/login") else {
             errorMessage = "Invalid server URL"
             isLoading = false
@@ -115,13 +115,13 @@ struct LoginView: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let loginData = [
+        let signInData = [
             "email": email,
             "password": password
         ]
         
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: loginData)
+            request.httpBody = try JSONSerialization.data(withJSONObject: signInData)
         } catch {
             errorMessage = "Failed to prepare request"
             isLoading = false
@@ -150,20 +150,20 @@ struct LoginView: View {
                 if httpResponse.statusCode == 200 {
                     // Success - parse response and store token
                     do {
-                        let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
+                        let signInResponse = try JSONDecoder().decode(SignInResponse.self, from: data)
                         let authUser = AuthUser(
-                            id: loginResponse.user.id,
-                            email: loginResponse.user.email,
-                            name: loginResponse.user.name,
-                            imageUrl: loginResponse.user.imageUrl
+                            id: signInResponse.user.id,
+                            email: signInResponse.user.email,
+                            name: signInResponse.user.name,
+                            imageUrl: signInResponse.user.imageUrl
                         )
                         
-                        // Use AuthenticationManager to handle login
-                        authManager.login(token: loginResponse.token, user: authUser)
+                        // Use AuthenticationManager to handle sign in
+                        authManager.signIn(token: signInResponse.token, user: authUser)
                         dismiss()
                         
                     } catch {
-                        errorMessage = "Failed to process login response"
+                        errorMessage = "Failed to process sign in response"
                     }
                 } else {
                     // Parse error message
@@ -171,7 +171,7 @@ struct LoginView: View {
                         let errorResponse = try JSONDecoder().decode(ErrorResponse.self, from: data)
                         errorMessage = errorResponse.error
                     } catch {
-                        errorMessage = "Login failed"
+                        errorMessage = "Sign in failed"
                     }
                 }
             }
@@ -180,13 +180,13 @@ struct LoginView: View {
 }
 
 // Response models
-struct LoginResponse: Codable {
+struct SignInResponse: Codable {
     let message: String
     let token: String
-    let user: LoginUser
+    let user: SignInUser
 }
 
-struct LoginUser: Codable {
+struct SignInUser: Codable {
     let id: Int
     let email: String
     let name: String?
@@ -198,6 +198,6 @@ struct ErrorResponse: Codable {
 }
 
 #Preview {
-    LoginView()
+    SignInView()
         .environmentObject(AuthenticationManager())
 }

@@ -75,6 +75,10 @@ struct ListingsView: View {
                 sortDropdownOverlay,
                 alignment: .topTrailing
             )
+            .overlay(
+                // Search tap-outside-to-close overlay
+                searchTapOutsideOverlay
+            )
 
         }
     }
@@ -107,6 +111,30 @@ struct ListingsView: View {
                 ))
             }
             .zIndex(1000)
+        }
+    }
+    
+    // MARK: - Search Tap Outside Overlay
+    @ViewBuilder
+    private var searchTapOutsideOverlay: some View {
+        if isSearching {
+            // Only cover the listings content area, not the entire screen
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    // Skip the title, orange bar, and toolbar area completely
+                    Spacer()
+                        .frame(height: 200)
+                    
+                    // Cover only the listings content area
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            isSearching = false
+                            isSearchFieldFocused = false
+                            timeSnapshot = Date() // Refresh time when closing search
+                        }
+                }
+            }
         }
     }
     

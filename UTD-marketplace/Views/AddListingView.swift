@@ -58,7 +58,7 @@ struct AddListingView: View {
                     VStack(spacing: 30) {
                         Spacer()
                             VStack(spacing: 8) {
-                                Text("Login Required")
+                                Text("Sign In Required")
                                     .font(.title2)
                                     .fontWeight(.bold)
                                     .foregroundColor(.primary)
@@ -69,7 +69,7 @@ struct AddListingView: View {
                         Button(action: {
                             showingAuthentication = true
                         }) {
-                            Text("Login to Create Listing")
+                            Text("Sign In to Create Listing")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
@@ -455,7 +455,7 @@ struct AddListingView: View {
             TextField(placeholder, text: text)
                 .font(.body)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.vertical, 16)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color.gray.opacity(0.1))
@@ -493,13 +493,13 @@ struct AddListingView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 16)
                 }
                 
                 TextEditor(text: text)
                     .font(.body)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                     .background(Color.clear)
                     .frame(height: 100)
             }

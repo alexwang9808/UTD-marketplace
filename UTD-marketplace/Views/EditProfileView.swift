@@ -156,7 +156,7 @@ struct EditProfileView: View {
                 TextField("Enter your name", text: $name)
                     .font(.body)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 16)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.1))
@@ -173,7 +173,7 @@ struct EditProfileView: View {
                 TextField("Tell us about yourself...", text: $bio, axis: .vertical)
                     .font(.body)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 16)
                     .lineLimit(4...8)
                     .background(
                         RoundedRectangle(cornerRadius: 12)

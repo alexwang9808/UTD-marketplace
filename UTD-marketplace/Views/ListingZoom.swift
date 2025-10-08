@@ -380,7 +380,7 @@ struct ListingDetailView: View {
                                             .foregroundColor(.orange)
                                         
                                         VStack(alignment: .leading, spacing: 4) {
-                                            Text("Login Required")
+                                            Text("Sign In Required")
                                                 .font(.headline)
                                                 .fontWeight(.semibold)
                                                 .foregroundColor(.primary)
@@ -395,7 +395,7 @@ struct ListingDetailView: View {
                                     Button(action: {
                                         showingAuthentication = true
                                     }) {
-                                        Text("Login to Send Message")
+                                        Text("Sign In to Send Message")
                                             .font(.headline)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.white)

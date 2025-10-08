@@ -26,7 +26,7 @@ class AuthenticationManager: ObservableObject {
         }
     }
     
-    func login(token: String, user: AuthUser) {
+    func signIn(token: String, user: AuthUser) {
         self.authToken = token
         self.currentUser = user
         self.isAuthenticated = true
@@ -39,7 +39,7 @@ class AuthenticationManager: ObservableObject {
             UserDefaults.standard.set(userData, forKey: "current_user_data")
         }
         
-        // Login successful
+        // Sign in successful
     }
     
     func logout() {

@@ -8,8 +8,6 @@ struct SignUpView: View {
     @State private var isLoading = false
     @State private var errorMessage = ""
     @State private var showingSuccess = false
-    @State private var showPassword = false
-    @State private var showConfirmPassword = false
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -23,8 +21,8 @@ struct SignUpView: View {
                         .fontWeight(.medium)
                     
                     TextField("Enter your username", text: $name)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16)
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                         .overlay(
@@ -41,8 +39,8 @@ struct SignUpView: View {
                         .fontWeight(.medium)
                     
                     TextField("utdallas.edu email", text: $email)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16)
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                         .overlay(
@@ -59,27 +57,10 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    HStack {
-                        Group {
-                            if showPassword {
-                                TextField("Create a password", text: $password)
-                                    .textContentType(.none)
-                            } else {
-                                SecureField("Create a password", text: $password)
-                                    .textContentType(.none)
-                            }
-                        }
-                        .animation(nil, value: showPassword)
-                        
-                        Button(action: {
-                            showPassword.toggle()
-                        }) {
-                            Image(systemName: showPassword ? "eye.slash" : "eye")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 12)
+                    SecureField("Create a password", text: $password)
+                        .textContentType(.none)
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                     .overlay(
@@ -94,27 +75,10 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    HStack {
-                        Group {
-                            if showConfirmPassword {
-                                TextField("Confirm your password", text: $confirmPassword)
-                                    .textContentType(.none)
-                            } else {
-                                SecureField("Confirm your password", text: $confirmPassword)
-                                    .textContentType(.none)
-                            }
-                        }
-                        .animation(nil, value: showConfirmPassword)
-                        
-                        Button(action: {
-                            showConfirmPassword.toggle()
-                        }) {
-                            Image(systemName: showConfirmPassword ? "eye.slash" : "eye")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 12)
+                    SecureField("Confirm your password", text: $confirmPassword)
+                        .textContentType(.none)
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                     .overlay(

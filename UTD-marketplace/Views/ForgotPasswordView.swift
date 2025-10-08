@@ -34,7 +34,14 @@ struct ForgotPasswordView: View {
                         .fontWeight(.medium)
                     
                     TextField("Enter your UTD email", text: $email)
-                        .textFieldStyle(.roundedBorder)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 16)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
                         .autocorrectionDisabled()
