@@ -8,6 +8,11 @@ struct SignInView: View {
     @State private var showingForgotPassword = false
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var authManager: AuthenticationManager
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case email, password
+    }
     
     var body: some View {
         VStack(spacing: 24) {
@@ -19,18 +24,27 @@ struct SignInView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    TextField("Enter your UTD email", text: $email)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 16)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                        .textInputAutocapitalization(.never)
-                        .keyboardType(.emailAddress)
-                        .autocorrectionDisabled()
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = .email
+                            }
+                        
+                        TextField("Enter your UTD email", text: $email)
+                            .focused($focusedField, equals: .email)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.emailAddress)
+                            .autocorrectionDisabled()
+                    }
                 }
                 
                 // Password Field
@@ -39,16 +53,25 @@ struct SignInView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    SecureField("Enter your password", text: $password)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 16)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                        .textContentType(.none)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = .password
+                            }
+                        
+                        SecureField("Enter your password", text: $password)
+                            .focused($focusedField, equals: .password)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .textContentType(.none)
+                    }
                 }
             }
             .padding(.horizontal)

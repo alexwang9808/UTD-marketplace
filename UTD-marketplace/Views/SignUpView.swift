@@ -9,9 +9,15 @@ struct SignUpView: View {
     @State private var errorMessage = ""
     @State private var showingSuccess = false
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case name, email, password, confirmPassword
+    }
     
     var body: some View {
-        VStack(spacing: 24) {
+        ScrollView {
+            VStack(spacing: 24) {
             // Signup Form
             VStack(spacing: 16) {
                 // Name Field
@@ -20,16 +26,25 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    TextField("Enter your username", text: $name)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 16)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                        .textInputAutocapitalization(.words)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = .name
+                            }
+                        
+                        TextField("Enter your profile name", text: $name)
+                            .focused($focusedField, equals: .name)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .textInputAutocapitalization(.words)
+                    }
                 }
                 
                 // Email Field
@@ -38,17 +53,26 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    TextField("utdallas.edu email", text: $email)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 16)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = .email
+                            }
+                        
+                        TextField("utdallas.edu email", text: $email)
+                            .focused($focusedField, equals: .email)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
                 }
                 
                 // Password Field
@@ -57,16 +81,25 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    SecureField("Create a password", text: $password)
-                        .textContentType(.none)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 16)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                    .overlay(
+                    ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = .password
+                            }
+                        
+                        SecureField("Create a password", text: $password)
+                            .focused($focusedField, equals: .password)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .textContentType(.none)
+                    }
                 }
                 
                 // Confirm Password Field
@@ -75,16 +108,25 @@ struct SignUpView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    SecureField("Confirm your password", text: $confirmPassword)
-                        .textContentType(.none)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 16)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                    .overlay(
+                    ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .frame(height: 48)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = .confirmPassword
+                            }
+                        
+                        SecureField("Confirm your password", text: $confirmPassword)
+                            .focused($focusedField, equals: .confirmPassword)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .textContentType(.none)
+                    }
                 }
             }
             .padding(.horizontal)
@@ -142,7 +184,9 @@ struct SignUpView: View {
                 .disabled(!isFormValid || isLoading)
                 .padding(.horizontal)
             }
+            .padding(.bottom, 100) // Extra space for keyboard
         }
+        .scrollDismissesKeyboard(.interactively)
     }
     
     private var isFormValid: Bool {
@@ -217,6 +261,8 @@ struct SignUpView: View {
             }
         }.resume()
     }
+}
+
 }
 
 #Preview {

@@ -447,6 +447,7 @@ struct ListingDetailView: View {
         }
         .sheet(isPresented: $showingAuthentication) {
             AuthenticationView()
+                .interactiveDismissDisabled()
         }
     }
     

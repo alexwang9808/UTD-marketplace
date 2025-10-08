@@ -155,12 +155,14 @@ struct EditProfileView: View {
                 
                 TextField("Enter your name", text: $name)
                     .font(.body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.1))
                     )
+                    .contentShape(Rectangle())
             }
             
             // Bio Field
@@ -172,6 +174,7 @@ struct EditProfileView: View {
                 
                 TextField("Tell us about yourself...", text: $bio, axis: .vertical)
                     .font(.body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
                     .lineLimit(4...8)
@@ -179,6 +182,7 @@ struct EditProfileView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.1))
                     )
+                    .contentShape(Rectangle())
                 
                 Text("\(bio.count)/100")
                     .font(.caption)

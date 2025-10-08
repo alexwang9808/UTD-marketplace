@@ -46,6 +46,7 @@ struct MessagesView: View {
         }
         .sheet(isPresented: $showingAuthentication) {
             AuthenticationView()
+                .interactiveDismissDisabled()
         }
     }
     

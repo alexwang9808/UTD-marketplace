@@ -101,6 +101,7 @@ struct AddListingView: View {
         }
         .sheet(isPresented: $showingAuthentication) {
             AuthenticationView()
+                .interactiveDismissDisabled()
         }
         .task(id: photoItems) {
             // Only load new items that aren't already in imageDataArray
@@ -454,6 +455,7 @@ struct AddListingView: View {
             
             TextField(placeholder, text: text)
                 .font(.body)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
                 .background(
@@ -464,6 +466,7 @@ struct AddListingView: View {
                                 .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                         )
                 )
+                .contentShape(Rectangle())
                 .keyboardType(keyboardType)
         }
     }

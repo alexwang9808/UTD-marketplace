@@ -37,11 +37,13 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // Serve uploaded files
 
-// Create email transporter - using console for development
+// Create email transporter - Gmail SMTP
 const transporter = nodemailer.createTransport({
-  streamTransport: true,
-  newline: 'unix',
-  buffer: true
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
 });
 
 // Helper function to send password reset email
@@ -74,11 +76,14 @@ async function sendPasswordResetEmail(email, name, resetToken) {
   };
 
   try {
-    // For development - log the reset link to console
-    console.log('\n=== PASSWORD RESET EMAIL ===');
+    // Send the actual email
+    await transporter.sendMail(mailOptions);
+    
+    // Also log for development
+    console.log('\n=== PASSWORD RESET EMAIL SENT ===');
     console.log(`To: ${email}`);
     console.log(`Password reset link: ${resetUrl}`);
-    console.log('=============================\n');
+    console.log('=================================\n');
   } catch (error) {
     console.error('Error sending reset email:', error);
     throw error;
@@ -115,11 +120,14 @@ async function sendVerificationEmail(email, name, verificationToken) {
   };
 
   try {
-    // For development - log the verification link to console
-    console.log('\n=== EMAIL VERIFICATION ===');
+    // Send the actual email
+    await transporter.sendMail(mailOptions);
+    
+    // Also log for development
+    console.log('\n=== EMAIL VERIFICATION SENT ===');
     console.log(`To: ${email}`);
     console.log(`Email verification link: ${verificationUrl}`);
-    console.log('===========================\n');
+    console.log('===============================\n');
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;

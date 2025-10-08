@@ -9,7 +9,7 @@ struct AppConfig {
     
     #if DEBUG
     // Development Configuration
-    static let baseURL = "http://11.26.5.201:3001"
+    static let baseURL = "http://172.20.10.3:3001"
     static let environment = "development"
     #else
     // Production Configuration
