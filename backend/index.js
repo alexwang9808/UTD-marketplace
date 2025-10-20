@@ -37,6 +37,15 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // Serve uploaded files
 
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'UTD Marketplace API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Create email transporter - Gmail SMTP
 const transporter = nodemailer.createTransport({
   service: 'gmail',
