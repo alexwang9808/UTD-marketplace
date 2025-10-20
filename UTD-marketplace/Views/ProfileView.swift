@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var showingSettingsDropdown = false
     @State private var selectedListingToEdit: Listing?
     @State private var timeSnapshot = Date()
+    @State private var showingEmailCopiedAlert = false
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
@@ -188,6 +189,11 @@ struct ProfileView: View {
                 }
             } message: {
                 Text("Are you sure you want to logout?")
+            }
+            .alert("Email Copied", isPresented: $showingEmailCopiedAlert) {
+                Button("OK") { }
+            } message: {
+                Text("utdmarketteam@gmail.com has been copied to your clipboard")
             }
         }
     }
@@ -698,8 +704,9 @@ struct ProfileView: View {
                     
                     // Contact
                     Button(action: {
-                        // Contact action - placeholder
-                        print("Contact tapped")
+                        // Copy email to clipboard
+                        UIPasteboard.general.string = "utdmarketteam@gmail.com"
+                        showingEmailCopiedAlert = true
                         withAnimation(.easeInOut(duration: 0.2)) {
                             showingSettingsDropdown = false
                         }

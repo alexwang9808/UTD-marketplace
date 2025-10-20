@@ -13,7 +13,7 @@ struct AppConfig {
     static let environment = "development"
     #else
     // Production Configuration
-    static let baseURL = "https://your-production-server.com"  // Replace with your actual production URL
+    static let baseURL = "https://utd-marketplace-production.up.railway.app"
     static let environment = "production"
     #endif
     

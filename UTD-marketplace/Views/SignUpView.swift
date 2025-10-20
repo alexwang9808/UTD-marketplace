@@ -16,8 +16,7 @@ struct SignUpView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
+        VStack(spacing: 24) {
             // Signup Form
             VStack(spacing: 16) {
                 // Name Field
@@ -184,9 +183,7 @@ struct SignUpView: View {
                 .disabled(!isFormValid || isLoading)
                 .padding(.horizontal)
             }
-            .padding(.bottom, 100) // Extra space for keyboard
         }
-        .scrollDismissesKeyboard(.interactively)
     }
     
     private var isFormValid: Bool {
@@ -263,7 +260,7 @@ struct SignUpView: View {
     }
 }
 
-}
+
 
 #Preview {
     SignUpView()

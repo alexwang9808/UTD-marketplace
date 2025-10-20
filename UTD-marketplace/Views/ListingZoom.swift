@@ -11,6 +11,11 @@ struct ListingDetailView: View {
     @State private var showSuccessMessage = false
     @State private var showingAuthentication = false
     @State private var pressedSellerProfile = false
+    @State private var currentImageIndex = 0
+    @FocusState private var isMessageFieldFocused: Bool
+    @State private var navigateToConversation = false
+    @State private var conversationToNavigate: Conversation? = nil
+    @State private var navigationPath = NavigationPath()
     
     // Use live listing data from viewModel if available, fallback to passed listing
     private var currentListing: Listing {
@@ -28,53 +33,80 @@ struct ListingDetailView: View {
                 .ignoresSafeArea()
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 12) {
                     // — Modern Image Gallery Card —
                     VStack(spacing: 0) {
                         if !currentListing.imageUrls.isEmpty {
-                            TabView {
+                            TabView(selection: $currentImageIndex) {
                                 ForEach(Array(currentListing.imageUrls.enumerated()), id: \.offset) { index, imageUrl in
-                                    if let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
-                                        AsyncImage(url: url) { phase in
-                                            switch phase {
-                                            case .success(let image):
-                                                image
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                                            case .failure(_):
-                                                RoundedRectangle(cornerRadius: 20)
-                                                    .fill(Color.red.opacity(0.1))
-                                                    .frame(height: 250)
-                                                    .overlay(
-                                                        VStack(spacing: 8) {
-                                                            Image(systemName: "exclamationmark.triangle.fill")
-                                                                .font(.title2)
-                                                                .foregroundColor(.red)
-                                                            Text("Failed to load")
-                                                                .font(.caption)
-                                                                .foregroundColor(.red)
-                                                        }
-                                                    )
-                                            case .empty:
-                                                RoundedRectangle(cornerRadius: 20)
-                                                    .fill(Color.gray.opacity(0.1))
-                                                    .frame(height: 250)
-                                                    .overlay(
-                                                        ProgressView()
-                                                            .scaleEffect(1.2)
-                                                    )
-                                            @unknown default:
-                                                RoundedRectangle(cornerRadius: 20)
-                                                    .fill(Color.gray.opacity(0.1))
-                                                    .frame(height: 250)
+                                    Group {
+                                        if let url = URL(string: "\(AppConfig.baseURL)\(imageUrl)") {
+                                            AsyncImage(url: url) { phase in
+                                                switch phase {
+                                                case .success(let image):
+                                                    image
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fit)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                                                case .failure(_):
+                                                    RoundedRectangle(cornerRadius: 20)
+                                                        .fill(Color.red.opacity(0.1))
+                                                        .frame(height: 250)
+                                                        .overlay(
+                                                            VStack(spacing: 8) {
+                                                                Image(systemName: "exclamationmark.triangle.fill")
+                                                                    .font(.title2)
+                                                                    .foregroundColor(.red)
+                                                                Text("Failed to load")
+                                                                    .font(.caption)
+                                                                    .foregroundColor(.red)
+                                                            }
+                                                        )
+                                                case .empty:
+                                                    RoundedRectangle(cornerRadius: 20)
+                                                        .fill(Color.gray.opacity(0.1))
+                                                        .frame(height: 250)
+                                                        .overlay(
+                                                            ProgressView()
+                                                                .scaleEffect(1.2)
+                                                        )
+                                                @unknown default:
+                                                    RoundedRectangle(cornerRadius: 20)
+                                                        .fill(Color.gray.opacity(0.1))
+                                                        .frame(height: 250)
+                                                }
                                             }
                                         }
                                     }
+                                    .tag(index)
                                 }
                             }
                             .frame(height: 300)
-                            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+                            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                            
+                            // Custom dots: white by default, gray when active
+                            if currentListing.imageUrls.count > 1 {
+                                HStack(spacing: 8) {
+                                    ForEach(0..<currentListing.imageUrls.count, id: \.self) { index in
+                                        Circle()
+                                            .fill(index == currentImageIndex ? Color.gray : Color.white)
+                                            .frame(width: 8, height: 8)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+                                            )
+                                            .onTapGesture {
+                                                withAnimation(.easeInOut(duration: 0.3)) {
+                                                    currentImageIndex = index
+                                                }
+                                            }
+                                    }
+                                }
+                                .padding(.top, 8)
+                                .onAppear {
+                                    currentImageIndex = 0
+                                }
+                            }
                         } else {
                             RoundedRectangle(cornerRadius: 20)
                                 .fill(
@@ -100,7 +132,7 @@ struct ListingDetailView: View {
                     .padding(.horizontal, 16)
 
                     // — Modern Listing Info Card —
-                    VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 12) {
                         // Title
                         Text(currentListing.title)
                             .font(.largeTitle)
@@ -116,7 +148,7 @@ struct ListingDetailView: View {
                         // Seller info section (clickable)
                         if let user = currentListing.user {
                             NavigationLink(destination: SellerProfileView(seller: user)) {
-                                HStack(spacing: 16) {
+                                HStack(spacing: 12) {
                                     // Seller profile picture
                                     Group {
                                         if let imageUrl = user.imageUrl,
@@ -162,7 +194,6 @@ struct ListingDetailView: View {
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
-                                .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
                                 .background(
                                     ZStack {
@@ -174,6 +205,7 @@ struct ListingDetailView: View {
                                         if pressedSellerProfile {
                                             RoundedRectangle(cornerRadius: 16)
                                                 .fill(Color.gray.opacity(0.2))
+                                                .padding(.horizontal, -8)
                                         }
                                     }
                                 )
@@ -192,7 +224,7 @@ struct ListingDetailView: View {
                             )
                         } else {
                             // Fallback for when user data is not available
-                            HStack(spacing: 16) {
+                            HStack(spacing: 12) {
                                 Circle()
                                     .fill(Color.gray.opacity(0.2))
                                     .frame(width: 50, height: 50)
@@ -215,7 +247,7 @@ struct ListingDetailView: View {
                         
                         // Description
                         if let description = currentListing.description {
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 6) {
                                 Text("Description")
                                     .font(.headline)
                                     .fontWeight(.semibold)
@@ -228,7 +260,7 @@ struct ListingDetailView: View {
                         }
                         
                         // Time ago and Location
-                        VStack(spacing: 8) {
+                        VStack(spacing: 6) {
                             // Time ago
                             HStack(spacing: 6) {
                                 Image(systemName: "clock.fill")
@@ -249,7 +281,7 @@ struct ListingDetailView: View {
                                             .font(.caption)
                                         Text(location)
                                             .font(.body)
-                                            .foregroundColor(.black)
+                                            .foregroundColor(.gray)
                                     }
                                 }
                                 
@@ -280,7 +312,7 @@ struct ListingDetailView: View {
                     if let userId = currentListing.userId, 
                        let currentUserId = authManager.currentUser?.id,
                        userId != currentUserId {
-                        VStack(spacing: 16) {
+                        VStack(spacing: 12) {
                             // Success message
                             if showSuccessMessage {
                                 HStack(spacing: 12) {
@@ -308,7 +340,7 @@ struct ListingDetailView: View {
                             
                             if authManager.isAuthenticated {
                                 // Modern message composer for authenticated users
-                                VStack(spacing: 16) {
+                                VStack(spacing: 12) {
                                     Text("Send a message to \(currentListing.user?.name ?? "User \(userId)")")
                                         .font(.headline)
                                         .fontWeight(.semibold)
@@ -323,6 +355,7 @@ struct ListingDetailView: View {
                                             .padding(.vertical, 12)
                                             .lineLimit(1...3)
                                             .disabled(isSendingMessage)
+                                            .focused($isMessageFieldFocused)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 20)
                                                     .fill(Color.gray.opacity(0.1))
@@ -330,6 +363,7 @@ struct ListingDetailView: View {
                                         
                                         // Modern send button
                                         Button {
+                                            isMessageFieldFocused = false
                                             sendMessage()
                                         } label: {
                                             if isSendingMessage {
@@ -348,12 +382,12 @@ struct ListingDetailView: View {
                                                 .fill(
                                                     messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage
                                                         ? LinearGradient(colors: [.gray.opacity(0.4), .gray.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                                        : LinearGradient(colors: [Color(red: 0.0, green: 0.4, blue: 0.2), Color(red: 0.0, green: 0.5, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                                        : LinearGradient(colors: [.orange, .orange.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
                                                 )
                                                 .shadow(
                                                     color: messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSendingMessage
                                                         ? .clear
-                                                        : Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.3),
+                                                        : .orange.opacity(0.3),
                                                     radius: 8,
                                                     x: 0,
                                                     y: 4
@@ -373,8 +407,8 @@ struct ListingDetailView: View {
                                 )
                             } else {
                                 // Modern login prompt for unauthenticated users
-                                VStack(spacing: 16) {
-                                    HStack(spacing: 16) {
+                                VStack(spacing: 12) {
+                                    HStack(spacing: 12) {
                                         Image(systemName: "lock.circle.fill")
                                             .font(.system(size: 32))
                                             .foregroundColor(.orange)
@@ -429,7 +463,16 @@ struct ListingDetailView: View {
 
                 }
                 .padding(.vertical, 20)
+                .simultaneousGesture(
+                    TapGesture()
+                        .onEnded { _ in
+                            isMessageFieldFocused = false
+                        }
+                )
             }
+        }
+        .onTapGesture {
+            isMessageFieldFocused = false
         }
         .navigationTitle("Listing")
         .navigationBarTitleDisplayMode(.inline)
@@ -448,6 +491,21 @@ struct ListingDetailView: View {
         .sheet(isPresented: $showingAuthentication) {
             AuthenticationView()
                 .interactiveDismissDisabled()
+        }
+        .sheet(isPresented: $navigateToConversation) {
+            if let conversation = conversationToNavigate {
+                NavigationView {
+                    ConversationDetailView(conversation: conversation)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Done") {
+                                    navigateToConversation = false
+                                }
+                            }
+                        }
+                }
+            }
         }
     }
     
@@ -481,6 +539,26 @@ struct ListingDetailView: View {
                     // Refresh conversations so they appear in Messages tab
                     if let userId = self.authManager.currentUser?.id {
                         self.viewModel.fetchConversations(for: userId)
+                        
+                        // Wait for conversations to be fetched, then find and navigate to the conversation
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            print("Looking for conversation with listingId: \(listingId)")
+                            print("Available conversations: \(self.viewModel.conversations.map { "\($0.id): listingId=\($0.listingId)" })")
+                            
+                            if let conversation = self.viewModel.conversations.first(where: { $0.listingId == listingId }) {
+                                print("Found conversation: \(conversation.id)")
+                                self.conversationToNavigate = conversation
+                                self.navigateToConversation = true
+                            } else {
+                                print("Conversation not found for listingId: \(listingId)")
+                                // Try to find by listing object comparison as fallback
+                                if let conversation = self.viewModel.conversations.first(where: { $0.listing.id == listingId }) {
+                                    print("Found conversation by listing.id: \(conversation.id)")
+                                    self.conversationToNavigate = conversation
+                                    self.navigateToConversation = true
+                                }
+                            }
+                        }
                     }
                 } else {
                     // Could add error handling here
