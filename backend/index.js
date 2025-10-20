@@ -1024,6 +1024,22 @@ app.post('/listings/:id/click', authenticateToken, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+// Run database migrations on startup
+async function startServer() {
+  try {
+    console.log('Running database migrations...');
+    const { execSync } = require('child_process');
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    console.log('Database migrations completed successfully!');
+  } catch (error) {
+    console.warn('Database migration failed:', error.message);
+    console.log('Continuing without migrations...');
+  }
+  
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+startServer();

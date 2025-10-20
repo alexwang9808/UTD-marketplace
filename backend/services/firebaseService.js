@@ -14,8 +14,8 @@ function initializeFirebase() {
             
             console.log('Firebase Admin initialized successfully');
         } catch (error) {
-            console.error('Firebase Admin initialization failed:', error.message);
-            console.log('Please add your Firebase service account key to backend/config/firebase-service-account.json');
+            console.warn('Firebase Admin initialization failed:', error.message);
+            console.log('Firebase features disabled - app will continue without push notifications');
         }
     }
 }
