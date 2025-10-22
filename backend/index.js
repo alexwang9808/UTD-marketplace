@@ -993,6 +993,18 @@ app.post('/listings/:id/click', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Listing not found' });
     }
     
+    // Don't count clicks from the listing creator
+    if (listing.userId === userId) {
+      const clickCount = await prisma.listingClick.count({
+        where: { listingId: listingId }
+      });
+      
+      return res.json({ 
+        message: 'Click not recorded - listing creator viewing own listing',
+        clickCount: clickCount
+      });
+    }
+    
     // Try to create a click record (will fail if already exists due to unique constraint)
     try {
       await prisma.listingClick.create({
