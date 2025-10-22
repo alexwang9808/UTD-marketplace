@@ -376,8 +376,10 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
 
-    // Send verification email
-    await sendVerificationEmail(email, name, verificationToken);
+    // Send verification email (non-blocking)
+    sendVerificationEmail(email, name, verificationToken).catch(error => {
+      console.error('Failed to send verification email:', error);
+    });
 
     res.status(201).json({
       message: 'User created successfully. Please check your email to verify your account.',
