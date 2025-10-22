@@ -52,7 +52,16 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD
-  }
+  },
+  // Add connection options to handle timeouts
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 30000,   // 30 seconds
+  socketTimeout: 60000,     // 60 seconds
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 100,
+  rateDelta: 20000,
+  rateLimit: 5
 });
 
 // Helper function to send password reset email
