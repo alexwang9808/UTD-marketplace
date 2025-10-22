@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const sgMail = require('@sendgrid/mail');
 
 // Import Firebase service
 const { initializeFirebase, sendMessageNotification } = require('./services/firebaseService');
@@ -46,7 +47,10 @@ app.get('/', (req, res) => {
   });
 });
 
-// Create email transporter - Gmail SMTP
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Create email transporter - Gmail SMTP (fallback)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -112,9 +116,9 @@ async function sendPasswordResetEmail(email, name, resetToken) {
 async function sendVerificationEmail(email, name, verificationToken) {
   const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${verificationToken}`;
   
-  const mailOptions = {
-    from: process.env.GMAIL_USER,
+  const msg = {
     to: email,
+    from: process.env.FROM_EMAIL || 'noreply@utdmarketplace.com',
     subject: 'Verify your UTD Marketplace account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -138,17 +142,33 @@ async function sendVerificationEmail(email, name, verificationToken) {
   };
 
   try {
-    console.log('\n=== ATTEMPTING TO SEND EMAIL ===');
-    console.log(`Gmail User: ${process.env.GMAIL_USER}`);
-    console.log(`Gmail App Password: ${process.env.GMAIL_APP_PASSWORD ? 'SET' : 'NOT SET'}`);
+    console.log('\n=== ATTEMPTING TO SEND EMAIL VIA SENDGRID ===');
+    console.log(`SendGrid API Key: ${process.env.SENDGRID_API_KEY ? 'SET' : 'NOT SET'}`);
+    console.log(`From Email: ${process.env.FROM_EMAIL || 'noreply@utdmarketplace.com'}`);
     console.log(`To: ${email}`);
     console.log(`Verification URL: ${verificationUrl}`);
     
-    // Send the actual email
-    await transporter.sendMail(mailOptions);
+    // Try SendGrid first
+    if (process.env.SENDGRID_API_KEY) {
+      await sgMail.send(msg);
+      console.log('✅ EMAIL SENT SUCCESSFULLY VIA SENDGRID');
+      console.log('===============================\n');
+      return;
+    }
     
-    console.log('✅ EMAIL SENT SUCCESSFULLY');
+    // Fallback to Gmail SMTP
+    console.log('⚠️ SendGrid not configured, falling back to Gmail SMTP...');
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: 'Verify your UTD Marketplace account',
+      html: msg.html
+    };
+    
+    await transporter.sendMail(mailOptions);
+    console.log('✅ EMAIL SENT SUCCESSFULLY VIA GMAIL SMTP');
     console.log('===============================\n');
+    
   } catch (error) {
     console.error('❌ EMAIL SENDING FAILED:');
     console.error('Error details:', error);
