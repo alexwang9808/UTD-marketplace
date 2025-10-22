@@ -129,16 +129,23 @@ async function sendVerificationEmail(email, name, verificationToken) {
   };
 
   try {
+    console.log('\n=== ATTEMPTING TO SEND EMAIL ===');
+    console.log(`Gmail User: ${process.env.GMAIL_USER}`);
+    console.log(`Gmail App Password: ${process.env.GMAIL_APP_PASSWORD ? 'SET' : 'NOT SET'}`);
+    console.log(`To: ${email}`);
+    console.log(`Verification URL: ${verificationUrl}`);
+    
     // Send the actual email
     await transporter.sendMail(mailOptions);
     
-    // Also log for development
-    console.log('\n=== EMAIL VERIFICATION SENT ===');
-    console.log(`To: ${email}`);
-    console.log(`Email verification link: ${verificationUrl}`);
+    console.log('✅ EMAIL SENT SUCCESSFULLY');
     console.log('===============================\n');
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ EMAIL SENDING FAILED:');
+    console.error('Error details:', error);
+    console.error('Error code:', error.code);
+    console.error('Error response:', error.response);
+    console.error('===============================\n');
     throw error;
   }
 }
