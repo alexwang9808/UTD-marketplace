@@ -146,7 +146,7 @@ struct SignUpView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                     
-                    Text("Please check your email to verify your account before logging in.")
+                    Text("Verification email sent!")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

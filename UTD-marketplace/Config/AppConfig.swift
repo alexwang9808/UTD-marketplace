@@ -7,15 +7,9 @@ struct AppConfig {
     
     // MARK: - Environment Configuration
     
-    #if DEBUG
-    // Development Configuration
-    static let baseURL = "http://172.20.10.3:3001"
-    static let environment = "development"
-    #else
-    // Production Configuration
+    // Always use Railway production URL
     static let baseURL = "https://utd-marketplace-production.up.railway.app"
     static let environment = "production"
-    #endif
     
     // MARK: - API Endpoints
     
