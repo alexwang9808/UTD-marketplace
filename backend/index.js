@@ -409,8 +409,6 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
 
-    console.log(`[SIGNUP] User: ${email}, Token saved: ${user.verificationToken ? 'YES' : 'NO'}`);
-
     // Send verification email (non-blocking)
     sendVerificationEmail(email, name, verificationToken).catch(error => {
       console.error('Failed to send verification email:', error);
@@ -445,10 +443,15 @@ app.post('/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    console.log(`[LOGIN] Email: ${email}, isVerified: ${user.isVerified}`);
+
     // Check if email is verified
     if (!user.isVerified) {
+      console.log(`[LOGIN] User not verified, rejecting login`);
       return res.status(401).json({ error: 'Please verify your email before logging in' });
     }
+
+    console.log(`[LOGIN] User verified, proceeding with login`);
 
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
@@ -596,10 +599,6 @@ app.get('/verify-email', async (req, res) => {
       where: { verificationToken: token }
     });
     
-    console.log(`[VERIFY-EMAIL] Token: ${token}`);
-    console.log(`[VERIFY-EMAIL] User found: ${!!user}`);
-    if (user) console.log(`[VERIFY-EMAIL] User email: ${user.email}`);
-
     if (!user) {
       return res.status(400).send(`
         <html>
@@ -624,7 +623,6 @@ app.get('/verify-email', async (req, res) => {
     }
 
     // Update user as verified and remove verification token
-    console.log(`[VERIFY-EMAIL] Updating user ${user.id} to verified...`);
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -632,7 +630,6 @@ app.get('/verify-email', async (req, res) => {
         verificationToken: null
       }
     });
-    console.log(`[VERIFY-EMAIL] User ${user.id} updated successfully!`);
 
     return res.send(`
       <html>
