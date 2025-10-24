@@ -42,7 +42,7 @@ app.use('/uploads', express.static('uploads')); // Serve uploaded files
 app.get('/', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'UTD Marketplace API is running',
+    message: 'UTD Market API is running',
     timestamp: new Date().toISOString()
   });
 });
@@ -75,12 +75,12 @@ async function sendPasswordResetEmail(email, name, resetToken) {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: 'Reset your UTD Marketplace password',
+    subject: 'Reset your UTD Market password',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">Reset Your Password</h2>
         <p>Hi ${name || 'there'},</p>
-        <p>You requested a password reset for your UTD Marketplace account. Click the button below to set a new password:</p>
+        <p>You requested a password reset for your UTD Market account. Click the button below to set a new password:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${resetUrl}" 
              style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -92,7 +92,7 @@ async function sendPasswordResetEmail(email, name, resetToken) {
         <p style="color: #dc2626; font-weight: bold;">This link will expire in 1 hour.</p>
         <p>If you didn't request this password reset, you can safely ignore this email.</p>
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-        <p style="color: #6b7280; font-size: 14px;">UTD Marketplace Team</p>
+        <p style="color: #6b7280; font-size: 14px;">UTD Market Team</p>
       </div>
     `
   };
@@ -124,7 +124,7 @@ async function sendVerificationEmail(email, name, verificationToken) {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Welcome to UTD Market!</h2>
         <p>Hi ${name || 'there'},</p>
-        <p>Thank you for signing up for UTD Marketplace. Please verify your email address by clicking the button below:</p>
+        <p>Thank you for signing up for UTD Market. Please verify your email address by clicking the button below:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verificationUrl}" 
              style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
@@ -134,7 +134,7 @@ async function sendVerificationEmail(email, name, verificationToken) {
         <p>This link will expire in 24 hours.</p>
         <p>If you didn't create an account, you can safely ignore this email.</p>
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-        <p style="color: #6b7280; font-size: 14px;">UTD Marketplace Team</p>
+        <p style="color: #6b7280; font-size: 14px;">UTD Market Team</p>
       </div>
     `
   };
@@ -150,7 +150,7 @@ async function sendVerificationEmail(email, name, verificationToken) {
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: email,
-      subject: 'Verify your UTD Marketplace account',
+      subject: 'Verify your UTD Market account',
       html: msg.html
     };
     
@@ -603,13 +603,14 @@ app.get('/verify-email', async (req, res) => {
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
             <h2 style="color: #16a34a;">Already Verified</h2>
             <p>Your email address has already been verified.</p>
-            <p>You can now log in to UTD Marketplace.</p>
+            <p>You can now log in to UTD Market.</p>
           </body>
         </html>
       `);
     }
 
     // Update user as verified and remove verification token
+    console.log(`[VERIFY-EMAIL] Updating user ${user.id} to verified...`);
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -617,13 +618,14 @@ app.get('/verify-email', async (req, res) => {
         verificationToken: null
       }
     });
+    console.log(`[VERIFY-EMAIL] User ${user.id} updated successfully!`);
 
     res.send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h2 style="color: #16a34a;">Email Verified Successfully!</h2>
           <p>Your email address has been verified.</p>
-          <p>You can now log in to UTD Marketplace.</p>
+          <p>You can now log in to UTD Market.</p>
         </body>
       </html>
     `);
