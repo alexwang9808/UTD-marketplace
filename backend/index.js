@@ -70,7 +70,7 @@ const transporter = nodemailer.createTransport({
 
 // Helper function to send password reset email
 async function sendPasswordResetEmail(email, name, resetToken) {
-  const resetUrl = `${process.env.BASE_URL}/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.BASE_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
   
   const mailOptions = {
     from: process.env.GMAIL_USER,
@@ -114,7 +114,7 @@ async function sendPasswordResetEmail(email, name, resetToken) {
 
 // Helper function to send verification email
 async function sendVerificationEmail(email, name, verificationToken) {
-  const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${verificationToken}`;
+  const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${encodeURIComponent(verificationToken)}`;
   
   const msg = {
     to: email,
