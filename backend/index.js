@@ -601,10 +601,32 @@ app.get('/verify-email', async (req, res) => {
   }
 
   try {
+    console.log('\n=== VERIFY EMAIL ENDPOINT ===');
+    console.log('Token from URL:', token);
+    console.log('Token length:', token.length);
+    
     // Find user with this verification token
     const user = await prisma.user.findUnique({
       where: { verificationToken: token }
     });
+
+    console.log('User found:', !!user);
+    if (user) {
+      console.log('User ID:', user.id);
+      console.log('User email:', user.email);
+      console.log('User token in DB:', user.verificationToken);
+      console.log('Tokens match:', user.verificationToken === token);
+    }
+    
+    // Debug: Get all users to see what tokens exist
+    const allUsers = await prisma.user.findMany({
+      select: { id: true, email: true, verificationToken: true, isVerified: true }
+    });
+    console.log('All users in DB:');
+    allUsers.forEach(u => {
+      console.log(`  ID: ${u.id}, Email: ${u.email}, Token: ${u.verificationToken?.substring(0, 10)}..., Verified: ${u.isVerified}`);
+    });
+    console.log('=============================\n');
 
     if (!user) {
       return res.status(400).send(`
