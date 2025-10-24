@@ -412,6 +412,15 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
 
+    // Debug: Log the created user and token
+    console.log('\n=== USER CREATED ===');
+    console.log('Email:', email);
+    console.log('User ID:', user.id);
+    console.log('Verification Token:', verificationToken);
+    console.log('Token saved in DB:', user.verificationToken);
+    console.log('Tokens match:', verificationToken === user.verificationToken);
+    console.log('===================\n');
+
     // Send verification email (non-blocking)
     sendVerificationEmail(email, name, verificationToken).catch(error => {
       console.error('Failed to send verification email:', error);
