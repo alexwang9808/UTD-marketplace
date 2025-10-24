@@ -142,22 +142,13 @@ async function sendVerificationEmail(email, name, verificationToken) {
   };
 
   try {
-    console.log('\n=== ATTEMPTING TO SEND EMAIL VIA SENDGRID ===');
-    console.log(`SendGrid API Key: ${process.env.SENDGRID_API_KEY ? 'SET' : 'NOT SET'}`);
-    console.log(`From Email: ${process.env.FROM_EMAIL || 'noreply@utdmarketplace.com'}`);
-    console.log(`To: ${email}`);
-    console.log(`Verification URL: ${verificationUrl}`);
-    
     // Try SendGrid first
     if (process.env.SENDGRID_API_KEY) {
       await sgMail.send(msg);
-      console.log('✅ EMAIL SENT SUCCESSFULLY VIA SENDGRID');
-      console.log('===============================\n');
       return;
     }
     
     // Fallback to Gmail SMTP
-    console.log('⚠️ SendGrid not configured, falling back to Gmail SMTP...');
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: email,
@@ -166,15 +157,9 @@ async function sendVerificationEmail(email, name, verificationToken) {
     };
     
     await transporter.sendMail(mailOptions);
-    console.log('✅ EMAIL SENT SUCCESSFULLY VIA GMAIL SMTP');
-    console.log('===============================\n');
     
   } catch (error) {
-    console.error('❌ EMAIL SENDING FAILED:');
-    console.error('Error details:', error);
-    console.error('Error code:', error.code);
-    console.error('Error response:', error.response);
-    console.error('===============================\n');
+    console.error('Failed to send verification email:', error);
     throw error;
   }
 }
@@ -412,15 +397,6 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
 
-    // Debug: Log the created user and token
-    console.log('\n=== USER CREATED ===');
-    console.log('Email:', email);
-    console.log('User ID:', user.id);
-    console.log('Verification Token:', verificationToken);
-    console.log('Token saved in DB:', user.verificationToken);
-    console.log('Tokens match:', verificationToken === user.verificationToken);
-    console.log('===================\n');
-
     // Send verification email (non-blocking)
     sendVerificationEmail(email, name, verificationToken).catch(error => {
       console.error('Failed to send verification email:', error);
@@ -601,32 +577,10 @@ app.get('/verify-email', async (req, res) => {
   }
 
   try {
-    console.log('\n=== VERIFY EMAIL ENDPOINT ===');
-    console.log('Token from URL:', token);
-    console.log('Token length:', token.length);
-    
     // Find user with this verification token
     const user = await prisma.user.findUnique({
       where: { verificationToken: token }
     });
-
-    console.log('User found:', !!user);
-    if (user) {
-      console.log('User ID:', user.id);
-      console.log('User email:', user.email);
-      console.log('User token in DB:', user.verificationToken);
-      console.log('Tokens match:', user.verificationToken === token);
-    }
-    
-    // Debug: Get all users to see what tokens exist
-    const allUsers = await prisma.user.findMany({
-      select: { id: true, email: true, verificationToken: true, isVerified: true }
-    });
-    console.log('All users in DB:');
-    allUsers.forEach(u => {
-      console.log(`  ID: ${u.id}, Email: ${u.email}, Token: ${u.verificationToken?.substring(0, 10)}..., Verified: ${u.isVerified}`);
-    });
-    console.log('=============================\n');
 
     if (!user) {
       return res.status(400).send(`
