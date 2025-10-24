@@ -634,7 +634,7 @@ app.get('/verify-email', async (req, res) => {
     });
     console.log(`[VERIFY-EMAIL] User ${user.id} updated successfully!`);
 
-    res.send(`
+    return res.send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h2 style="color: #16a34a;">Email Verified Successfully!</h2>
