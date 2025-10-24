@@ -47,6 +47,20 @@ app.get('/', (req, res) => {
   });
 });
 
+// Test endpoint to check user verification status
+app.get('/test-user/:email', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: req.params.email },
+      select: { id: true, email: true, isVerified: true, verificationToken: true }
+    });
+    
+    res.json(user || { error: 'User not found' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
