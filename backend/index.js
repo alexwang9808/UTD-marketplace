@@ -119,10 +119,10 @@ async function sendVerificationEmail(email, name, verificationToken) {
   const msg = {
     to: email,
     from: process.env.FROM_EMAIL || 'noreply@utdmarketplace.com',
-    subject: 'Verify your UTD Marketplace account',
+    subject: 'Verify your UTD Market account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Welcome to UTD Marketplace!</h2>
+        <h2 style="color: #2563eb;">Welcome to UTD Market!</h2>
         <p>Hi ${name || 'there'},</p>
         <p>Thank you for signing up for UTD Marketplace. Please verify your email address by clicking the button below:</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -131,8 +131,6 @@ async function sendVerificationEmail(email, name, verificationToken) {
             Verify Email Address
           </a>
         </div>
-        <p>Or copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #6b7280;">${verificationUrl}</p>
         <p>This link will expire in 24 hours.</p>
         <p>If you didn't create an account, you can safely ignore this email.</p>
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
@@ -397,6 +395,8 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
 
+    console.log(`[SIGNUP] User: ${email}, Token saved: ${user.verificationToken ? 'YES' : 'NO'}`);
+
     // Send verification email (non-blocking)
     sendVerificationEmail(email, name, verificationToken).catch(error => {
       console.error('Failed to send verification email:', error);
@@ -581,6 +581,10 @@ app.get('/verify-email', async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { verificationToken: token }
     });
+    
+    console.log(`[VERIFY-EMAIL] Token: ${token}`);
+    console.log(`[VERIFY-EMAIL] User found: ${!!user}`);
+    if (user) console.log(`[VERIFY-EMAIL] User email: ${user.email}`);
 
     if (!user) {
       return res.status(400).send(`
