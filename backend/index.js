@@ -409,6 +409,8 @@ app.post('/auth/signup', async (req, res) => {
       }
     });
 
+    console.log(`[SIGNUP] Created user: ${email}, isVerified: ${user.isVerified}, verificationToken: ${verificationToken}`);
+
     // Send verification email (non-blocking)
     sendVerificationEmail(email, name, verificationToken).catch(error => {
       console.error('Failed to send verification email:', error);
@@ -452,6 +454,12 @@ app.post('/auth/login', async (req, res) => {
     }
 
     console.log(`[LOGIN] User verified, proceeding with login`);
+
+    // Check if user has a password
+    if (!user.password) {
+      console.log(`[LOGIN] User has no password set`);
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
 
     // Check password
     const validPassword = await bcrypt.compare(password, user.password);
