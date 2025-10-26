@@ -387,10 +387,6 @@ app.post('/auth/signup', async (req, res) => {
       where: { email }
     });
 
-    if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists' });
-    }
-
     // Hash password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -398,18 +394,36 @@ app.post('/auth/signup', async (req, res) => {
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        verificationToken,
-        isVerified: false
-      }
-    });
-
-    console.log(`[SIGNUP] Created user: ${email}, isVerified: ${user.isVerified}, verificationToken: ${verificationToken}`);
+    let user;
+    
+    if (existingUser) {
+      // User exists - update their account and reset verification status
+      user = await prisma.user.update({
+        where: { email },
+        data: {
+          password: hashedPassword,
+          name,
+          verificationToken,
+          isVerified: false,
+          // Clear any reset tokens
+          resetToken: null,
+          resetTokenExpiry: null
+        }
+      });
+      console.log(`[SIGNUP] Updated existing user: ${email}, isVerified: ${user.isVerified}, verificationToken: ${verificationToken}`);
+    } else {
+      // Create new user
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          verificationToken,
+          isVerified: false
+        }
+      });
+      console.log(`[SIGNUP] Created user: ${email}, isVerified: ${user.isVerified}, verificationToken: ${verificationToken}`);
+    }
 
     // Send verification email (non-blocking)
     sendVerificationEmail(email, name, verificationToken).catch(error => {
