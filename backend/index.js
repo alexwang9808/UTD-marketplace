@@ -604,7 +604,10 @@ app.post('/auth/reset-password', async (req, res) => {
 app.get('/verify-email', async (req, res) => {
   const { token } = req.query;
 
+  console.log(`[VERIFY] Verification attempt with token: ${token ? token.substring(0, 10) + '...' : 'none'}`);
+
   if (!token) {
+    console.log(`[VERIFY] No token provided`);
     return res.status(400).send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -622,6 +625,7 @@ app.get('/verify-email', async (req, res) => {
     });
     
     if (!user) {
+      console.log(`[VERIFY] No user found with token`);
       return res.status(400).send(`
         <html>
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -632,7 +636,10 @@ app.get('/verify-email', async (req, res) => {
       `);
     }
 
+    console.log(`[VERIFY] User found: ${user.email}, isVerified: ${user.isVerified}`);
+
     if (user.isVerified) {
+      console.log(`[VERIFY] User already verified`);
       return res.send(`
         <html>
           <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -653,6 +660,8 @@ app.get('/verify-email', async (req, res) => {
       }
     });
 
+    console.log(`[VERIFY] User ${user.email} verified successfully`);
+
     return res.send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -664,7 +673,7 @@ app.get('/verify-email', async (req, res) => {
     `);
 
   } catch (error) {
-    console.error('Email verification error:', error);
+    console.error('[VERIFY] Email verification error:', error);
     res.status(500).send(`
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
