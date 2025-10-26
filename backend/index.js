@@ -1018,6 +1018,74 @@ app.get('/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Delete user account
+app.delete('/users/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  
+  if (!id || isNaN(parseInt(id))) {
+    return res.status(400).json({ error: 'Invalid user ID' });
+  }
+  
+  // Only allow users to delete their own account
+  if (parseInt(id) !== req.user.userId) {
+    return res.status(403).json({ error: 'You can only delete your own account' });
+  }
+  
+  try {
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Delete all associated messages
+    await prisma.message.deleteMany({
+      where: { userId: parseInt(id) }
+    });
+    
+    // Delete all associated clicks
+    await prisma.listingClick.deleteMany({
+      where: { userId: parseInt(id) }
+    });
+    
+    // Find all listings by this user
+    const listings = await prisma.listing.findMany({
+      where: { userId: parseInt(id) }
+    });
+    
+    // Delete all messages and clicks for each listing
+    for (const listing of listings) {
+      await prisma.message.deleteMany({
+        where: { listingId: listing.id }
+      });
+      await prisma.listingClick.deleteMany({
+        where: { listingId: listing.id }
+      });
+    }
+    
+    // Delete all listings
+    await prisma.listing.deleteMany({
+      where: { userId: parseInt(id) }
+    });
+    
+    // Finally, delete the user
+    await prisma.user.delete({
+      where: { id: parseInt(id) }
+    });
+    
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.error('Error deleting user account:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Track a click on a listing (unique per user per listing)
 app.post('/listings/:id/click', authenticateToken, async (req, res) => {
   const { id } = req.params;
