@@ -484,7 +484,7 @@ app.post('/auth/signup', async (req, res) => {
     });
 
     res.status(201).json({
-      message: 'User created successfully. Please check your email to verify your account.',
+      message: 'User created successfully. Please check your junk mail to verify your account.',
       userId: user.id
     });
 
@@ -719,7 +719,7 @@ app.get('/verify-email', async (req, res) => {
       <html>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h2 style="color: #16a34a;">Email Verified Successfully!</h2>
-          <p>Your email address has been verified.</p>
+          <p>User ${user.email} verified successfully.</p>
           <p>You can now log in to UTD Market.</p>
         </body>
       </html>

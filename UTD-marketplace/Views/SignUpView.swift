@@ -70,6 +70,7 @@ struct SignUpView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                             .textInputAutocapitalization(.never)
+                            .keyboardType(.emailAddress)
                             .autocorrectionDisabled()
                     }
                 }
