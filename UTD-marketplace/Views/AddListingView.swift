@@ -57,19 +57,10 @@ struct AddListingView: View {
                     
                     VStack(spacing: 30) {
                         Spacer()
-                            VStack(spacing: 8) {
-                                Text("Sign In Required")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.primary)
-                            
-                            }
-   
-                        
                         Button(action: {
                             showingAuthentication = true
                         }) {
-                            Text("Sign In to Create Listing")
+                            Text("Sign in to add a listing")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)

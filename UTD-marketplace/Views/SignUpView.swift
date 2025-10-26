@@ -99,6 +99,7 @@ struct SignUpView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                             .textContentType(.none)
+                            .allowsHitTesting(false)
                     }
                 }
                 
@@ -126,6 +127,7 @@ struct SignUpView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                             .textContentType(.none)
+                            .allowsHitTesting(false)
                     }
                 }
             }

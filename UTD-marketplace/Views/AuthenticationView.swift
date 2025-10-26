@@ -10,7 +10,7 @@ struct AuthenticationView: View {
             VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 16) {
-                    Text("UTD Marketplace")
+                    Text("UTD Market")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.orange)
