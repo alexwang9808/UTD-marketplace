@@ -61,6 +61,59 @@ app.get('/test-user/:email', async (req, res) => {
   }
 });
 
+// Test endpoint to delete a user by email (for testing only)
+app.delete('/test-user/:email', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: req.params.email }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Delete all associated messages
+    await prisma.message.deleteMany({
+      where: { userId: user.id }
+    });
+    
+    // Delete all associated clicks
+    await prisma.listingClick.deleteMany({
+      where: { userId: user.id }
+    });
+    
+    // Find all listings by this user
+    const listings = await prisma.listing.findMany({
+      where: { userId: user.id }
+    });
+    
+    // Delete all messages and clicks for each listing
+    for (const listing of listings) {
+      await prisma.message.deleteMany({
+        where: { listingId: listing.id }
+      });
+      await prisma.listingClick.deleteMany({
+        where: { listingId: listing.id }
+      });
+    }
+    
+    // Delete all listings
+    await prisma.listing.deleteMany({
+      where: { userId: user.id }
+    });
+    
+    // Finally, delete the user
+    await prisma.user.delete({
+      where: { id: user.id }
+    });
+    
+    res.json({ message: 'User deleted successfully', email: req.params.email });
+  } catch (error) {
+    console.error('Error deleting test user:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
