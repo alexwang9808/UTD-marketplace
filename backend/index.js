@@ -8,9 +8,8 @@ require('dotenv').config();
 // Add these new imports for authentication
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const sgMail = require('@sendgrid/mail');
+const { Resend } = require('resend');
 
 // Import Firebase service
 const { initializeFirebase, sendMessageNotification } = require('./services/firebaseService');
@@ -114,26 +113,8 @@ app.delete('/test-user/:email', async (req, res) => {
   }
 });
 
-// Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// Create email transporter - Gmail SMTP (fallback)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD
-  },
-  // Add connection options to handle timeouts
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 30000,   // 30 seconds
-  socketTimeout: 60000,     // 60 seconds
-  pool: true,
-  maxConnections: 5,
-  maxMessages: 100,
-  rateDelta: 20000,
-  rateLimit: 5
-});
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Helper function to send password reset email
 async function sendPasswordResetEmail(email, name, resetToken) {
@@ -165,14 +146,14 @@ async function sendPasswordResetEmail(email, name, resetToken) {
   };
 
   try {
-    // Send the actual email
-    await transporter.sendMail(mailOptions);
+    await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'UTD Market <onboarding@resend.dev>',
+      to: email,
+      subject: mailOptions.subject,
+      html: mailOptions.html
+    });
     
-    // Also log for development
-    console.log('\n=== PASSWORD RESET EMAIL SENT ===');
-    console.log(`To: ${email}`);
-    console.log(`Password reset link: ${resetUrl}`);
-    console.log('=================================\n');
+    console.log(`[RESET] Password reset email sent to ${email}`);
   } catch (error) {
     console.error('Error sending reset email:', error);
     throw error;
@@ -207,22 +188,14 @@ async function sendVerificationEmail(email, name, verificationToken) {
   };
 
   try {
-    // Try SendGrid first
-    if (process.env.SENDGRID_API_KEY) {
-      await sgMail.send(msg);
-      return;
-    }
-    
-    // Fallback to Gmail SMTP
-    const mailOptions = {
-      from: process.env.GMAIL_USER,
+    await resend.emails.send({
+      from: process.env.FROM_EMAIL || 'UTD Market <onboarding@resend.dev>',
       to: email,
-      subject: 'Verify your UTD Market account',
+      subject: msg.subject,
       html: msg.html
-    };
+    });
     
-    await transporter.sendMail(mailOptions);
-    
+    console.log(`[VERIFY] Verification email sent to ${email}`);
   } catch (error) {
     console.error('Failed to send verification email:', error);
     throw error;

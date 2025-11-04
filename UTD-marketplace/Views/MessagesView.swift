@@ -258,7 +258,7 @@ struct MessagesView: View {
                     Spacer(minLength: 100)
                     
                     VStack(spacing: 12) {
-                        Text("Sign in to view messages")
+                        Text("Sign in to send messages")
                             .font(.title2)
                             .fontWeight(.semibold)
                     }
