@@ -166,7 +166,7 @@ async function sendVerificationEmail(email, name, verificationToken) {
   
   const msg = {
     to: email,
-    from: process.env.FROM_EMAIL || 'noreply@utdmarketplace.com',
+    from: process.env.FROM_EMAIL || 'UTD Market <noreply@utdmarket.site>',
     subject: 'Verify your UTD Market account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -189,7 +189,7 @@ async function sendVerificationEmail(email, name, verificationToken) {
 
   try {
     await resend.emails.send({
-      from: process.env.FROM_EMAIL || 'UTD Market <onboarding@resend.dev>',
+      from: process.env.FROM_EMAIL || 'UTD Market <noreply@utdmarket.site>',
       to: email,
       subject: msg.subject,
       html: msg.html
