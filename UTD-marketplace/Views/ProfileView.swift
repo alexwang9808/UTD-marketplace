@@ -14,6 +14,7 @@ struct ProfileView: View {
     @State private var selectedListingToEdit: Listing?
     @State private var timeSnapshot = Date()
     @State private var showingEmailCopiedAlert = false
+    @State private var showingAuthentication = false
     
     // Computed property to get current user's listings count
     private var myListingsCount: Int {
@@ -195,6 +196,10 @@ struct ProfileView: View {
             } message: {
                 Text("utdmarketteam@gmail.com has been copied to your clipboard")
             }
+            .sheet(isPresented: $showingAuthentication) {
+                AuthenticationView()
+                    .interactiveDismissDisabled()
+            }
         }
     }
     
@@ -315,6 +320,35 @@ struct ProfileView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+            } else if !authManager.isAuthenticated {
+                // Sign in button when not authenticated
+                VStack(spacing: 12) {                    
+                    Button(action: {
+                        showingAuthentication = true
+                    }) {
+                        Text("Sign in")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.orange, .orange.opacity(0.8)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .shadow(color: .orange.opacity(0.3), radius: 6, x: 0, y: 3)
+                            )
+                    }
+                    .padding(.top, 8)
+                    
+                    Spacer(minLength: 50)
+                }
+                .frame(maxWidth: .infinity)
             }
         }
     }

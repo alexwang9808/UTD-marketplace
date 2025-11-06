@@ -16,9 +16,10 @@ struct SignUpView: View {
     }
     
     var body: some View {
-        VStack(spacing: 24) {
-            // Signup Form
-            VStack(spacing: 16) {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Signup Form
+                VStack(spacing: 16) {
                 // Name Field
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Profile Name")
@@ -129,6 +130,13 @@ struct SignUpView: View {
                             .textContentType(.none)
                             .allowsHitTesting(false)
                     }
+                    
+                    // Password mismatch warning
+                    if !confirmPassword.isEmpty && !password.isEmpty && password != confirmPassword {
+                        Text("Passwords must match")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
                 }
             }
             .padding(.horizontal)
@@ -149,19 +157,11 @@ struct SignUpView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
                     
-                    Text("Verification email sent!")
+                    Text("Please check your junk mail for a verification email.")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
                     
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 12)
-                    .background(Color(red: 0.0, green: 0.4, blue: 0.2))
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
                 }
                 .padding(.top, 20)
             } else {
@@ -186,7 +186,10 @@ struct SignUpView: View {
                 .disabled(!isFormValid || isLoading)
                 .padding(.horizontal)
             }
+            }
+            .padding(.top)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
     
     private var isFormValid: Bool {
