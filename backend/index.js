@@ -402,9 +402,10 @@ app.post('/auth/signup', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  // Check if email is UTD domain
-  if (!email.endsWith('@utdallas.edu')) {
-    return res.status(400).json({ error: 'Only UTD email addresses are allowed' });
+  // Validate email format
+  const emailRegex = /^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address' });
   }
 
   try {
