@@ -49,7 +49,7 @@ struct SignUpView: View {
                 
                 // Email Field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("UTD Email")
+                    Text("Personal Email")
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
@@ -66,7 +66,7 @@ struct SignUpView: View {
                                 focusedField = .email
                             }
                         
-                        TextField("utdallas.edu email", text: $email)
+                        TextField("Enter your email", text: $email)
                             .focused($focusedField, equals: .email)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
@@ -194,10 +194,15 @@ struct SignUpView: View {
     
     private var isFormValid: Bool {
         !name.isEmpty &&
-        email.hasSuffix("@utdallas.edu") &&
-        email.count > "@utdallas.edu".count &&
+        isValidEmail(email) &&
         !password.isEmpty &&
         password == confirmPassword
+    }
+    
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
     }
     
     private func signUp() {

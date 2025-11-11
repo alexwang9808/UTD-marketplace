@@ -28,7 +28,7 @@ struct AddListingView: View {
             "Capella Hall",
             "Helix Hall",
             "Sirius Hall",
-            "Other"
+            "Off campus"
         ]
 
     var body: some View {
