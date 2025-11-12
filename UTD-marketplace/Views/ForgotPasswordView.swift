@@ -62,7 +62,7 @@ struct ForgotPasswordView: View {
                 if !message.isEmpty {
                     Text(message)
                         .font(.caption)
-                        .foregroundColor(showingSuccess ? Color(red: 0.0, green: 0.4, blue: 0.2) : .red)
+                        .foregroundColor(showingSuccess ? .blue : .red)
                         .padding(.horizontal)
                 }
                 
@@ -95,7 +95,7 @@ struct ForgotPasswordView: View {
                         }
                         .padding(.horizontal, 32)
                         .padding(.vertical, 12)
-                        .background(Color(red: 0.0, green: 0.4, blue: 0.2))
+                        .background(.orange)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                     }

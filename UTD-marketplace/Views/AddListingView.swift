@@ -35,6 +35,8 @@ struct AddListingView: View {
         NavigationStack {
             if authManager.isAuthenticated {
                 authenticatedView
+                    .navigationTitle("Add Listing")
+                    .navigationBarTitleDisplayMode(.inline)
             } else {
                 // Unauthenticated view inline
                 ZStack {
@@ -181,7 +183,7 @@ struct AddListingView: View {
                     )
                     .foregroundColor(
                         (title.isEmpty || price.isEmpty || description.isEmpty || imageDataArray.isEmpty) 
-                        ? .gray : Color(red: 0.0, green: 0.4, blue: 0.2)
+                        ? .gray : .orange
                     )
                 }
             }

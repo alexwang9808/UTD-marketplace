@@ -170,13 +170,13 @@ async function sendVerificationEmail(email, name, verificationToken) {
     subject: 'Verify your UTD Market account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Welcome to UTD Market!</h2>
+        <h2 style="color: #f97316;">Welcome to UTD Market!</h2>
         <p>Hi ${name || 'there'},</p>
-        <p>Thank you for signing up for UTD Market. Please verify your email address by clicking the button below:</p>
-        <div style="text-align: center; margin: 30px 0;">
+        <p>Thank you for signing up for UTD Market. Please verify your email address by clicking the link below:</p>
+        <div style="margin: 30px 0;">
           <a href="${verificationUrl}" 
-             style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            Verify Email Address
+             style="color: #2563eb; word-break: break-all; text-decoration: underline;">
+            ${verificationUrl}
           </a>
         </div>
         <p>This link will expire in 24 hours.</p>

@@ -266,13 +266,7 @@ struct ProfileView: View {
                         .scaledToFill()
                 } placeholder: {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                        .fill(Color.gray.opacity(0.2))
                         .overlay(
                             ProgressView()
                                 .scaleEffect(1.2)
@@ -280,17 +274,11 @@ struct ProfileView: View {
                 }
             } else {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.2), Color(red: 0.0, green: 0.4, blue: 0.2).opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color.gray.opacity(0.2))
                     .overlay(
                         Image(systemName: "person.fill")
                             .font(.system(size: 50))
-                            .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                            .foregroundColor(.gray)
                     )
             }
         }
@@ -721,7 +709,7 @@ struct ProfileView: View {
                         HStack(spacing: 12) {
                             Image(systemName: "person.circle")
                                 .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.green)
+                                .foregroundColor(.orange)
                                 .frame(width: 20)
                             Text("Edit profile")
                                 .font(.body)

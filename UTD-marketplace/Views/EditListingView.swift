@@ -145,7 +145,7 @@ struct EditListingView: View {
                     )
                     .foregroundColor(
                         (title.isEmpty || price.isEmpty || description.isEmpty || isUpdating)
-                        ? .gray : Color(red: 0.0, green: 0.4, blue: 0.2)
+                        ? .gray : .orange
                     )
                 }
             }

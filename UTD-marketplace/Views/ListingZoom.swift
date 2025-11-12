@@ -159,7 +159,7 @@ struct ListingDetailView: View {
                                                     .scaledToFill()
                                             } placeholder: {
                                                 Circle()
-                                                    .fill(Color(red: 0.0, green: 0, blue: 0).opacity(0.2))
+                                                    .fill(Color.gray.opacity(0.2))
                                                     .overlay(
                                                         ProgressView()
                                                             .scaleEffect(0.8)
@@ -318,22 +318,22 @@ struct ListingDetailView: View {
                                 HStack(spacing: 12) {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.title2)
-                                        .foregroundColor(.green)
+                                        .foregroundColor(.blue)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("Message sent!")
                                             .font(.headline)
                                             .fontWeight(.semibold)
-                                            .foregroundColor(.green)
+                                            .foregroundColor(.blue)
                                     }
                                     Spacer()
                                 }
                                 .padding(16)
                                 .background(
                                     RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color.green.opacity(0.1))
+                                        .fill(Color.blue.opacity(0.1))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 16)
-                                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                                                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
                                         )
                                 )
                             }

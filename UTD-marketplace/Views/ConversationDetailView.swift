@@ -185,7 +185,7 @@ struct ConversationDetailView: View {
             ZStack {
                 // Background bubbles
                 Circle()
-                    .fill(LinearGradient(colors: [.green.opacity(0.2), .blue.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .fill(LinearGradient(colors: [.orange.opacity(0.2), .blue.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing))
                     .frame(width: 80, height: 80)
                     .offset(x: -15, y: -10)
                 
@@ -199,7 +199,7 @@ struct ConversationDetailView: View {
                     .font(.system(size: 50))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.green, .blue, .purple],
+                            colors: [.orange, .blue, .purple],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )

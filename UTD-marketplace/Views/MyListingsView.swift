@@ -129,7 +129,7 @@ struct MyListingsView: View {
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 8)
-                                        .background(Color(red: 0.0, green: 0.4, blue: 0.2))
+                                        .background(.orange)
                                         .cornerRadius(8)
                                     }
                                 }
