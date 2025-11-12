@@ -99,7 +99,7 @@ struct SignUpView: View {
                             .focused($focusedField, equals: .password)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
-                            .textContentType(.none)
+                            .textContentType(.oneTimeCode)
                             .allowsHitTesting(false)
                     }
                 }
@@ -127,7 +127,7 @@ struct SignUpView: View {
                             .focused($focusedField, equals: .confirmPassword)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
-                            .textContentType(.none)
+                            .textContentType(.oneTimeCode)
                             .allowsHitTesting(false)
                     }
                     
@@ -155,9 +155,9 @@ struct SignUpView: View {
                     Text("Account Created!")
                         .font(.headline)
                         .fontWeight(.semibold)
-                        .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                        .foregroundColor(.black)
                     
-                    Text("Please check your junk mail for a verification email.")
+                    Text("Please check your email for a verification link.")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
@@ -166,7 +166,10 @@ struct SignUpView: View {
                 .padding(.top, 20)
             } else {
                 // Sign Up Button
-                Button(action: signUp) {
+                Button(action: {
+                    focusedField = nil
+                    signUp()
+                }) {
                     HStack {
                         if isLoading {
                             ProgressView()
@@ -183,8 +186,10 @@ struct SignUpView: View {
                     .foregroundColor(isFormValid ? .white : .secondary)
                     .cornerRadius(12)
                 }
+                .buttonStyle(.plain)
                 .disabled(!isFormValid || isLoading)
                 .padding(.horizontal)
+                .animation(nil, value: focusedField)
             }
             }
             .padding(.top)

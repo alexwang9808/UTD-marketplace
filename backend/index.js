@@ -578,6 +578,170 @@ app.post('/auth/forgot-password', async (req, res) => {
   }
 });
 
+// Reset password page (GET)
+app.get('/reset-password', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invalid Link - UTD Market</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+          .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; text-align: center; }
+          h1 { color: #dc2626; margin-bottom: 16px; }
+          p { color: #6b7280; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Invalid Reset Link</h1>
+          <p>This password reset link is invalid or has expired.</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
+  // Verify token exists in database
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: {
+          gt: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Invalid Link - UTD Market</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+            .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; text-align: center; }
+            h1 { color: #dc2626; margin-bottom: 16px; }
+            p { color: #6b7280; line-height: 1.6; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Invalid or Expired Link</h1>
+            <p>This password reset link is invalid or has expired. Please request a new password reset.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    // Show password reset form
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reset Password - UTD Market</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+          .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; width: 100%; }
+          h1 { color: #111827; margin-bottom: 8px; font-size: 24px; }
+          .subtitle { color: #6b7280; margin-bottom: 24px; font-size: 14px; }
+          label { display: block; color: #374151; font-weight: 500; margin-bottom: 8px; font-size: 14px; }
+          input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 16px; }
+          button { width: 100%; padding: 12px; background: #f97316; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+          button:hover { background: #ea580c; }
+          button:disabled { background: #d1d5db; cursor: not-allowed; }
+          .message { padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+          .error { background: #fee2e2; color: #dc2626; }
+          .success { background: #d1fae5; color: #059669; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Reset Your Password</h1>
+          <p class="subtitle">Enter your new password below</p>
+          <div id="message"></div>
+          <form id="resetForm">
+            <label for="password">New Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter new password" required minlength="6">
+            
+            <label for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" required minlength="6">
+            
+            <button type="submit" id="submitBtn">Reset Password</button>
+          </form>
+        </div>
+        
+        <script>
+          const form = document.getElementById('resetForm');
+          const messageDiv = document.getElementById('message');
+          const submitBtn = document.getElementById('submitBtn');
+          
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+              messageDiv.innerHTML = '<div class="message error">Passwords do not match</div>';
+              return;
+            }
+            
+            if (password.length < 6) {
+              messageDiv.innerHTML = '<div class="message error">Password must be at least 6 characters long</div>';
+              return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Resetting...';
+            
+            try {
+              const response = await fetch('/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  token: '${token}',
+                  newPassword: password
+                })
+              });
+              
+              const data = await response.json();
+              
+              if (response.ok) {
+                messageDiv.innerHTML = '<div class="message success">Password reset successful! You can now sign in with your new password.</div>';
+                form.style.display = 'none';
+              } else {
+                messageDiv.innerHTML = '<div class="message error">' + (data.error || 'Failed to reset password') + '</div>';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Reset Password';
+              }
+            } catch (error) {
+              messageDiv.innerHTML = '<div class="message error">Network error. Please try again.</div>';
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'Reset Password';
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error loading reset page:', error);
+    res.status(500).send('Server error');
+  }
+});
+
 // Reset password endpoint
 app.post('/auth/reset-password', async (req, res) => {
   const { token, newPassword } = req.body;

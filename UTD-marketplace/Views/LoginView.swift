@@ -85,7 +85,10 @@ struct SignInView: View {
             }
             
             // Sign In Button
-            Button(action: signIn) {
+            Button(action: {
+                focusedField = nil
+                signIn()
+            }) {
                 HStack {
                     if isLoading {
                         ProgressView()
@@ -102,14 +105,16 @@ struct SignInView: View {
                 .foregroundColor(isFormValid ? .white : .secondary)
                 .cornerRadius(12)
             }
+            .buttonStyle(.plain)
             .disabled(!isFormValid || isLoading)
             .padding(.horizontal)
+            .animation(nil, value: focusedField)
             
             // Forgot Password
             Button(action: { showingForgotPassword = true }) {
                 Text("Forgot Password?")
                     .font(.subheadline)
-                    .foregroundColor(Color(red: 0.0, green: 0.4, blue: 0.2))
+                    .foregroundColor(.black)
             }
         }
         .sheet(isPresented: $showingForgotPassword) {

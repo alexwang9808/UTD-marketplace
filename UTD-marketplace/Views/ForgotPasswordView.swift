@@ -24,11 +24,7 @@ struct ForgotPasswordView: View {
                     Text("Reset Password")
                         .font(.title2)
                         .fontWeight(.bold)
-                    
-                    Text("Enter your UTD email address and we'll send you a link to reset your password.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
+ 
                 }
                 .padding(.top, 40)
                 
@@ -51,7 +47,7 @@ struct ForgotPasswordView: View {
                                 focusedField = .email
                             }
                         
-                        TextField("Enter your UTD email", text: $email)
+                        TextField("Enter your email", text: $email)
                             .focused($focusedField, equals: .email)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
@@ -93,14 +89,6 @@ struct ForgotPasswordView: View {
                 
                 if showingSuccess {
                     VStack(spacing: 16) {
-                        Text("Check your email")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                        
-                        Text("We've sent password reset instructions to your email address.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
                         
                         Button("Done") {
                             dismiss()
@@ -130,7 +118,9 @@ struct ForgotPasswordView: View {
     }
     
     private var isEmailValid: Bool {
-        email.hasSuffix("@utdallas.edu") && email.count > "@utdallas.edu".count
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        return emailPredicate.evaluate(with: email)
     }
     
     private func sendResetEmail() {

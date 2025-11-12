@@ -33,6 +33,7 @@ struct AuthenticationView: View {
                             .padding(.vertical, 12)
                             .background(showingSignIn ? Color.orange : Color.clear)
                     }
+                    .buttonStyle(.plain)
                     
                     Button(action: { showingSignIn = false }) {
                         Text("Sign Up")
@@ -43,6 +44,7 @@ struct AuthenticationView: View {
                             .padding(.vertical, 12)
                             .background(!showingSignIn ? Color.orange : Color.clear)
                     }
+                    .buttonStyle(.plain)
                 }
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(10)
